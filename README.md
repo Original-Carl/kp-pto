@@ -17,7 +17,10 @@ It's built mobile-first for phones on slow connections:
 | `js/events.js` | **The events list.** Edit this file to post events. |
 | `js/main.js` | Menu toggle, events rendering, and Zeffy embeds |
 | `assets/favicon.svg` | Browser-tab icon |
-| `tests/events.test.js` | Unit tests for the events logic |
+| `fonts/` | Self-hosted woff2 fonts, their OFL licenses, and `sources.json` (origin and checksum for each font) |
+| `tests/` | Unit tests: events logic and the Inherit checks |
+| `scripts/` | Pipeline checks: `check-inherit.mjs` and `check-licenses.mjs` |
+| `tools/ci/` | CI-only npm tooling (never shipped) |
 
 ## Editing content
 
@@ -75,9 +78,9 @@ This repo uses a DevSecOps pipeline with five stages. Work can't move on until e
 | Stage | What it covers | Gate |
 |-------|----------------|------|
 | **Develop** | Feature branches, the local pre-commit hook, the PR template, and self-review | The hook passes. Changes reach `main` only by PR: the ruleset blocks direct pushes and force-pushes and requires linear history, and the repo allows squash-merge only. |
-| **Inherit** | Everything the site uses but didn't write: GitHub Actions, CI tooling, fonts, and third-party services | *Planned* |
+| **Inherit** | Everything the site uses but didn't write: GitHub Actions, CI tooling, fonts, and third-party services | The CI `inherit` job passes. Actions are pinned to commit SHAs and container images by digest. The page loads nothing from third parties beyond the CSP allowlist. Fonts match their recorded checksums. CI tooling has no high or critical vulnerabilities, no OSV findings, and only allowlisted licenses. Install scripts are denied unless reviewed. |
 | **Build** | CI checks: tests, HTML validation, page-weight budget, browser tests, secret scan, and static analysis | *Planned* |
-| **Deploy** | GitHub Pages, deployed automatically on merge after CI passes, with a smoke test afterward | *Planned* (today, a push to `main` deploys once `test` passes) |
+| **Deploy** | GitHub Pages, deployed automatically on merge after CI passes, with a smoke test afterward | *Planned* (today, a push to `main` deploys once `test` and `inherit` pass) |
 | **Operate** | Weekly checks of the live site, the domain, and email DNS | *Planned* |
 
 ### Develop
@@ -90,6 +93,28 @@ This repo uses a DevSecOps pipeline with five stages. Work can't move on until e
   ```
 
 - To report a security issue, see [SECURITY.md](SECURITY.md).
+
+### Supply chain (Inherit)
+
+| Control | Where | Run locally |
+|---------|-------|-------------|
+| GitHub Actions are pinned to full commit SHAs, and container images by digest | `scripts/check-inherit.mjs` | `node scripts/check-inherit.mjs` |
+| The CSP allows only `'self'`, plus `data:` images and `https://www.zeffy.com` frames. Every resource the page loads (scripts, styles, fonts, images, CSS `url()`) is same-origin. | `scripts/check-inherit.mjs` (`CSP_ALLOWED`) | same |
+| Self-hosted fonts must match the sha256 recorded in `fonts/sources.json`. A new font needs an entry there. | `scripts/check-inherit.mjs` | same |
+| CI tooling lives in `tools/ci` with its own lockfile and is never shipped. The site itself has no dependencies. | `tools/ci/package.json` | — |
+| Vulnerable tooling (high or critical) fails CI | `inherit` job, `npm audit` | `cd tools/ci && npm audit --audit-level=high` |
+| Known vulnerabilities anywhere in the `tools/ci` lockfile fail CI | `inherit` job, [OSV-Scanner](https://google.github.io/osv-scanner/) (image pinned by digest) | — |
+| Licenses must pass SPDX evaluation, read straight from the lockfile | `scripts/check-licenses.mjs` | `node scripts/check-licenses.mjs` |
+| An SBOM (CycloneDX) is produced on every CI run and kept 90 days | `inherit` job artifact `sbom` | `cd tools/ci && npm sbom --sbom-format=cyclonedx` |
+| Weekly grouped updates for actions and `tools/ci`, each release at least 7 days old | `.github/dependabot.yml` | — |
+| npm won't resolve versions published in the last 7 days. For an urgent fix, add `min-release-age-exclude=<pkg>`. | `tools/ci/.npmrc` | — |
+| Dependency install scripts are blocked unless approved | `allowScripts` in `tools/ci/package.json` | `cd tools/ci && npm install-scripts ls` |
+| Security updates arrive immediately, one PR per advisory | Repo setting (Dependabot security updates) | — |
+
+**Third-party services:**
+- **At runtime:** Zeffy (payment forms, in an iframe; the only third-party origin the page contacts) and GitHub Pages (hosting).
+- **Behind the scenes:** Squarespace (domain registration and DNS) and Google Workspace (`@kp-pto.org` email).
+- **Fonts:** Fjalla One and Lato come from Google Fonts but are downloaded once and self-hosted under the SIL OFL 1.1, so there's no runtime request to Google.
 
 ## Deployment
 The site is hosted on **GitHub Pages** from `Original-Carl/kp-pto`. The domain is registered at **Squarespace Domains**, which only provides DNS here; Squarespace can't host a hand-built site.

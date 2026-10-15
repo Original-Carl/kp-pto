@@ -1,0 +1,38 @@
+# Inherit stage: keep what we consume current. Security updates are separate
+# (repo setting) and still arrive immediately, one PR per advisory.
+version: 2
+updates:
+  # CI-only tooling (see tools/ci/package.json). Nothing here ships to the site.
+  - package-ecosystem: npm
+    directory: /tools/ci
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/New_York
+    open-pull-requests-limit: 5
+    # Wait a week after a release before proposing it. Matches min-release-age
+    # in tools/ci/.npmrc.
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci-tools
+    groups:
+      ci-tools-minor-patch:
+        update-types: [minor, patch]
+    # Majors come as individual PRs so each can be reviewed on its own.
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/New_York
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ["*"]

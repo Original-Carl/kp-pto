@@ -1,7 +1,8 @@
 name: Deploy
 
-# test:   every PR to main and every push to main (required status check).
-# deploy: pushes to main (and manual runs), only after tests pass. Publishes
+# test:    every PR to main and every push to main (required status check).
+# inherit: same triggers — supply-chain gate (see README → Supply chain).
+# deploy:  pushes to main (and manual runs), only after test + inherit pass. Publishes
 #         just the public files to GitHub Pages; tests/ and README stay out.
 # The custom domain (kp-pto.org) is set in repo Settings → Pages, not via a
 # CNAME file — Actions-based Pages deployments ignore CNAME files.
@@ -28,9 +29,56 @@ jobs:
           node-version-file: .nvmrc
       - run: node --test
 
+  inherit:
+    name: inherit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Actions pinned, page loads allowlisted, fonts verified
+        run: node scripts/check-inherit.mjs
+      - name: License allowlist (tools/ci)
+        run: node scripts/check-licenses.mjs
+      - name: Install tools/ci
+        working-directory: tools/ci
+        run: npm ci --no-fund
+      - name: npm audit (tools/ci, high+)
+        working-directory: tools/ci
+        run: npm audit --audit-level=high
+      - name: Install scripts reviewed (tools/ci)
+        working-directory: tools/ci
+        run: |
+          out=$(npm install-scripts ls)
+          echo "$out"
+          case "$out" in "No packages with unreviewed install scripts."*) ;; *) echo "::error::Review install scripts, then npm install-scripts approve|deny <pkg>"; exit 1 ;; esac
+      # Runs the same image google/osv-scanner-action v2.6.0 uses, pinned by digest
+      # (the action's own action.yml references the image by a movable tag).
+      # Dependabot can't bump this; update the digest by hand when bumping OSV-Scanner,
+      # and only to a release at least 7 days old.
+      - name: OSV scan (tools/ci lockfile)
+        env:
+          OSV_IMAGE: ghcr.io/google/osv-scanner-action@sha256:71ad04ab2f8798be47870f9b18817ad317c2f8f2f97aa6726ba10d5578bc174a # v2.6.0
+        run: >-
+          docker run --rm
+          -v "$GITHUB_WORKSPACE:/github/workspace" -w /github/workspace
+          "$OSV_IMAGE" --lockfile=tools/ci/package-lock.json
+      - name: SBOM (CycloneDX, tools/ci)
+        working-directory: tools/ci
+        run: npm sbom --sbom-format=cyclonedx > "$GITHUB_WORKSPACE/sbom.cdx.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sbom
+          path: sbom.cdx.json
+          retention-days: 90
+
   deploy:
     name: deploy
-    needs: test
+    needs: [test, inherit]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
