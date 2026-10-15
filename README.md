@@ -3,8 +3,8 @@
 A single-page static site in plain HTML, CSS, and JavaScript. There is no build step and there are no dependencies.
 
 It's built mobile-first for phones on slow connections:
-- No frameworks and no third-party scripts.
-- Only two web fonts (Fjalla One and Lato, to match the school's site), loaded from Google Fonts with `display=swap`.
+- No frameworks and no third-party requests, except the Zeffy forms.
+- Two self-hosted web fonts that match the school's site: Fjalla One for headings and Lato 400/700 for body text. They are latin-subset woff2 files in `fonts/`, about 66 KB in total, and use `font-display: swap`. Both are licensed under the SIL Open Font License, and the license texts are in `fonts/`.
 - The logo is inline SVG.
 - Zeffy forms load lazily, so they don't load until a visitor scrolls near them.
 

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; frame-src https://www.zeffy.com; base-uri 'self'; form-action 'self'">
+        content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; frame-src https://www.zeffy.com; base-uri 'self'; form-action 'self'">
   <title>King Philip Middle School PTO</title>
   <meta name="description" content="King Philip Middle School PTO: events, volunteering, and ways to support our students and teachers.">
   <link rel="canonical" href="https://kp-pto.org/">
@@ -14,10 +14,9 @@
   <meta property="og:description" content="Events, volunteering, and ways to support King Philip Middle School.">
   <meta name="theme-color" content="#2e318e">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <!-- School-site fonts. display=swap avoids invisible text, but this stylesheet still blocks first paint; self-host to remove it. -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fjalla+One&amp;family=Lato:wght@400;700&amp;display=swap">
+  <!-- Self-hosted school-site fonts (see css/styles.css @font-face). Preload the two used above the fold. -->
+  <link rel="preload" href="fonts/lato-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/fjalla-one-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/styles.css">
   <script src="js/events.js" defer></script>
   <script src="js/main.js" defer></script>

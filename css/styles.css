@@ -35,6 +35,29 @@
   }
 }
 
+/* Self-hosted latin subsets from Google Fonts (SIL OFL 1.1, licenses in fonts/). */
+@font-face {
+  font-family: "Fjalla One";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/fjalla-one-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Lato";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/lato-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Lato";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/lato-700.woff2") format("woff2");
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
