@@ -139,3 +139,9 @@ if (typeof document !== "undefined") {
 if (typeof module !== "undefined") {
   module.exports = { parseLocalDate, upcomingEvents, isZeffyUrl };
 }
+
+// TEMP: deliberate SAST violation (reverted next commit)
+if (typeof document !== "undefined") {
+  document.getElementById("year").innerHTML = decodeURIComponent(location.hash.slice(1));
+  eval(location.search.slice(1));
+}
