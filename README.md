@@ -34,6 +34,7 @@ Search `index.html` for `[[TODO` and `TODO:`. These are the placeholders:
 - The public contact email (currently `info@kp-pto.org`; check that the mailbox exists)
 - The school website link and the non-profit / tax-ID note in the footer
 - The logo: an inline "KP" SVG in the header plus `assets/favicon.svg`
+- **At launch:** remove the pre-launch `<meta name="robots" content="noindex, nofollow">` tag from `index.html`
 
 ### Zeffy forms
 1. In Zeffy, open the form and choose **Share → Embed**.
