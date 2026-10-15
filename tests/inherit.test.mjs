@@ -169,3 +169,9 @@ test("licenses: link entries are skipped; non-node_modules paths keep their name
   assert.equal(failures.length, 1);
   assert.match(failures[0], /^packages\/a@2\.0\.0/);
 });
+
+test("action pins: *_IMAGE env vars must be pinned by digest", () => {
+  const bad = ["          SEMGREP_IMAGE: semgrep/semgrep:latest", "          GITLEAKS_IMAGE: zricethezav/gitleaks:latest", "          scan-image: alpine:3"];
+  for (const line of bad) assert.equal(checkActionPins({ "w.yml": line }).length, 1, `not caught: ${line}`);
+  assert.deepEqual(checkActionPins({ "w.yml": `          SEMGREP_IMAGE: semgrep/semgrep@sha256:${DIGEST} # 1.178.0` }), []);
+});

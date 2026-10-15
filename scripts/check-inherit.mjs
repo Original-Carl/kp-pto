@@ -50,7 +50,8 @@ export function checkActionPins(files) {
           || /^[\w.-]+\/[\w./-]+@[0-9a-f]{40}$/.test(ref);
         if (!ok) errors.push(`${where}: action "${ref}" is not pinned to a full commit SHA`);
       }
-      const keyed = /(?:^|[{,\s-])["']?(?:image|container)["']?\s*:\s*["']?([^\s"',}]+)/.exec(code);
+      // image:, container:, and any *_IMAGE / *-image env var (e.g. SEMGREP_IMAGE: …).
+      const keyed = /(?:^|[{,\s-])["']?(?:[\w-]*[_-])?(?:image|container)["']?\s*:\s*["']?([^\s"',}]+)/i.exec(code);
       const images = [
         ...(keyed && !keyed[1].startsWith("${{") ? [keyed[1]] : []),
         ...[...code.matchAll(/\b((?:ghcr\.io|docker\.io|quay\.io|gcr\.io|public\.ecr\.aws|mcr\.microsoft\.com)\/[^\s"']+)/g)].map((x) => x[1]),

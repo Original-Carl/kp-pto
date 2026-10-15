@@ -3,3 +3,6 @@
 .vscode/
 *.log
 node_modules/
+_site/
+tools/ci/test-results/
+tools/ci/playwright-report/

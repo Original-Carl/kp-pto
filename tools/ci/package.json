@@ -7,6 +7,9 @@
   "engines": {
     "node": ">=24"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@playwright/test": "1.64.0",
+    "html-validate": "11.16.2"
+  },
   "allowScripts": {}
 }
