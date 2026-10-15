@@ -152,12 +152,19 @@ jobs:
           semgrep scan --metrics=off --error
           --config p/javascript --config p/owasp-top-ten --config p/secrets
           --json-output=semgrep.json --text
+      # Fails if Semgrep scanned nothing or hit a real error. Parser warnings
+      # (a file or snippet Semgrep can't fully parse) are listed, not fatal.
       - name: Sanity check (rules actually ran)
         if: always()
         run: |
           files=$(jq '.paths.scanned | length' semgrep.json)
-          errors=$(jq '.errors | length' semgrep.json)
+          errors=$(jq '[.errors[] | select(.level == "error")] | length' semgrep.json)
+          warnings=$(jq -r '.errors[] | select(.level != "error") | "- \(.path // "?"): \(.type | tostring | .[0:80])"' semgrep.json)
           echo "files scanned: $files, semgrep errors: $errors"
+          if [ -n "$warnings" ]; then
+            printf '### Semgrep parser warnings\n%s\n' "$warnings" >> "$GITHUB_STEP_SUMMARY"
+            echo "$warnings"
+          fi
           test "$files" -gt 0 && test "$errors" -eq 0
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
