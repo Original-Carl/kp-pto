@@ -62,11 +62,34 @@ Then open http://localhost:8080.
 
 ## Tests
 
-You need Node 18 or newer. No install step is required.
+You need Node 24 (see `.nvmrc`). No install step is required.
 
 ```bash
 node --test
 ```
+
+## Pipeline
+
+This repo uses a DevSecOps pipeline with five stages. Work can't move on until each stage's gate passes. The stages are being rolled out one at a time; a stage marked *planned* isn't live yet.
+
+| Stage | What it covers | Gate |
+|-------|----------------|------|
+| **Develop** | Feature branches, the local pre-commit hook, the PR template, and self-review | The hook passes. Changes reach `main` only by PR: the ruleset blocks direct pushes and force-pushes and requires linear history, and the repo allows squash-merge only. |
+| **Inherit** | Everything the site uses but didn't write: GitHub Actions, CI tooling, fonts, and third-party services | *Planned* |
+| **Build** | CI checks: tests, HTML validation, page-weight budget, browser tests, secret scan, and static analysis | *Planned* |
+| **Deploy** | GitHub Pages, deployed automatically on merge after CI passes, with a smoke test afterward | *Planned* (today, a push to `main` deploys once `test` passes) |
+| **Operate** | Weekly checks of the live site, the domain, and email DNS | *Planned* |
+
+### Develop
+
+- Work happens on a branch and goes through a PR to `main`. The PR template has a checklist that covers phone width, personal data, and third-party content.
+- Turn on the local hook once per clone. It runs the tests and blocks stray `debugger` and `console.log` lines:
+
+  ```bash
+  git config core.hooksPath .githooks
+  ```
+
+- To report a security issue, see [SECURITY.md](SECURITY.md).
 
 ## Deployment
 The site is hosted on **GitHub Pages** from `Original-Carl/kp-pto`. The domain is registered at **Squarespace Domains**, which only provides DNS here; Squarespace can't host a hand-built site.

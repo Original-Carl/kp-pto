@@ -1,0 +1,13 @@
+#!/bin/sh
+# Develop stage: local gate before each commit. Enable once per clone:
+#   git config core.hooksPath .githooks
+# Note: node --test runs against the working tree, not just what's staged.
+set -e
+
+# Leftover debugging in staged JS (added lines only; skip the +++ file headers).
+if git diff --cached -U0 --diff-filter=ACM -- '*.js' '*.mjs' | grep -v '^+++ ' | grep -nE '^\+.*\b(debugger|console\.log)\b'; then
+  echo "pre-commit: remove debugger / console.log before committing." >&2
+  exit 1
+fi
+
+node --test
