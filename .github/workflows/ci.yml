@@ -1,0 +1,174 @@
+name: CI
+
+# Required status checks on every PR to main, and re-run on every push to main.
+# A successful run on a push to main triggers deploy.yml.
+#   test     unit tests (node --test)                       — Develop/Build
+#   inherit  supply-chain gate (README → Supply chain)       — Inherit
+#   verify   HTML validation + browser tests on _site/       — Build
+#   secrets  gitleaks over the full git history              — Build
+#   sast     Semgrep static analysis                         — Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - run: node --test
+
+  inherit:
+    name: inherit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Actions pinned, page loads allowlisted, fonts verified
+        run: node scripts/check-inherit.mjs
+      - name: License allowlist (tools/ci)
+        run: node scripts/check-licenses.mjs
+      - name: Install tools/ci
+        working-directory: tools/ci
+        run: npm ci --no-fund
+      - name: npm audit (tools/ci, high+)
+        working-directory: tools/ci
+        run: npm audit --audit-level=high
+      - name: Install scripts reviewed (tools/ci)
+        working-directory: tools/ci
+        run: |
+          out=$(npm install-scripts ls)
+          echo "$out"
+          case "$out" in "No packages with unreviewed install scripts."*) ;; *) echo "::error::Review install scripts, then npm install-scripts approve|deny <pkg>"; exit 1 ;; esac
+      # Runs the same image google/osv-scanner-action v2.6.0 uses, pinned by digest
+      # (the action's own action.yml references the image by a movable tag).
+      # Dependabot can't bump this; update the digest by hand when bumping OSV-Scanner,
+      # and only to a release at least 7 days old.
+      - name: OSV scan (tools/ci lockfile)
+        env:
+          OSV_IMAGE: ghcr.io/google/osv-scanner-action@sha256:71ad04ab2f8798be47870f9b18817ad317c2f8f2f97aa6726ba10d5578bc174a # v2.6.0
+        run: >-
+          docker run --rm
+          -v "$GITHUB_WORKSPACE:/github/workspace" -w /github/workspace
+          "$OSV_IMAGE" --lockfile=tools/ci/package-lock.json
+      - name: SBOM (CycloneDX, tools/ci)
+        working-directory: tools/ci
+        run: npm sbom --sbom-format=cyclonedx > "$GITHUB_WORKSPACE/sbom.cdx.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sbom
+          path: sbom.cdx.json
+          retention-days: 90
+
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: tools/ci/package-lock.json
+      - name: Install tools/ci
+        working-directory: tools/ci
+        run: npm ci --no-fund --no-audit
+      - name: HTML validation
+        working-directory: tools/ci
+        run: npx html-validate ../../index.html
+      - name: Install Chromium
+        working-directory: tools/ci
+        run: npx playwright install --with-deps chromium
+      # Stages _site/ (exactly what deploys) and serves it; mobile + desktop.
+      # Includes the page-weight budget (150 KB on the phone layout).
+      - name: Browser tests
+        working-directory: tools/ci
+        run: npx playwright test
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report
+          path: tools/ci/playwright-report
+          retention-days: 14
+
+  # Secret scanning with gitleaks over the whole git history. (GitHub secret
+  # scanning and push protection are also on; this makes it a PR gate.)
+  secrets:
+    name: secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: gitleaks (full history)
+        env:
+          GITLEAKS_IMAGE: ghcr.io/gitleaks/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f # v8.30.1
+        run: >-
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo"
+          -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0='*'
+          "$GITLEAKS_IMAGE" git /repo --redact --verbose --no-banner --exit-code 1
+
+  sast:
+    name: sast
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Semgrep
+        env:
+          SEMGREP_IMAGE: semgrep/semgrep@sha256:32e459968daabe7ab86968184a29109b9564aa00392401156f9788452b42786b # 1.178.0
+        run: >-
+          docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$SEMGREP_IMAGE"
+          semgrep scan --metrics=off --error
+          --config p/javascript --config p/owasp-top-ten --config p/secrets
+          --json-output=semgrep.json --text
+      # Fails if Semgrep scanned nothing or hit a real error. Parser warnings
+      # (a file or snippet Semgrep can't fully parse) are listed, not fatal.
+      - name: Sanity check (rules actually ran)
+        if: always()
+        run: |
+          files=$(jq '.paths.scanned | length' semgrep.json)
+          errors=$(jq '[.errors[] | select(.level == "error")] | length' semgrep.json)
+          warnings=$(jq -r '.errors[] | select(.level != "error") | "- \(.path // "?"): \(.type | tostring | .[0:80])"' semgrep.json)
+          echo "files scanned: $files, semgrep errors: $errors"
+          if [ -n "$warnings" ]; then
+            printf '### Semgrep parser warnings\n%s\n' "$warnings" >> "$GITHUB_STEP_SUMMARY"
+            echo "$warnings"
+          fi
+          test "$files" -gt 0 && test "$errors" -eq 0
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: semgrep
+          path: semgrep.json
+          retention-days: 30

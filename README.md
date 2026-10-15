@@ -19,8 +19,8 @@ It's built mobile-first for phones on slow connections:
 | `assets/favicon.svg` | Browser-tab icon |
 | `fonts/` | Self-hosted woff2 fonts, their OFL licenses, and `sources.json` (origin and checksum for each font) |
 | `tests/` | Unit tests: events logic and the Inherit checks |
-| `scripts/` | Pipeline checks: `check-inherit.mjs` and `check-licenses.mjs` |
-| `tools/ci/` | CI-only npm tooling (never shipped) |
+| `scripts/` | Pipeline scripts: `check-inherit.mjs`, `check-licenses.mjs`, and `stage-site.mjs` (copies the shipped files into `_site/`) |
+| `tools/ci/` | CI-only npm tooling (never shipped): Playwright, html-validate, and the browser tests in `tools/ci/e2e/` |
 
 ## Editing content
 
@@ -65,11 +65,31 @@ Then open http://localhost:8080.
 
 ## Tests
 
-You need Node 24 (see `.nvmrc`). No install step is required.
+You need Node 24 (see `.nvmrc`). Unit tests need no install step:
 
 ```bash
 node --test
 ```
+
+The HTML validation and browser tests use the CI tooling in `tools/ci`. Install it once:
+
+```bash
+cd tools/ci && npm ci && npx playwright install chromium
+```
+
+Then, from `tools/ci`, validate the HTML:
+
+```bash
+npx html-validate ../../index.html
+```
+
+And run the browser tests. They stage `_site/` and serve it with Python:
+
+```bash
+npx playwright test
+```
+
+To run the browser tests against a deployed site instead, set `BASE_URL`. Before launch, use `BASE_URL=https://original-carl.github.io/kp-pto/ npx playwright test`. After launch, use `https://kp-pto.org/`: the github.io address will redirect there, and the tests would count the redirect as a third-party load.
 
 ## Pipeline
 
@@ -79,8 +99,8 @@ This repo uses a DevSecOps pipeline with five stages. Work can't move on until e
 |-------|----------------|------|
 | **Develop** | Feature branches, the local pre-commit hook, the PR template, and self-review | The hook passes. Changes reach `main` only by PR: the ruleset blocks direct pushes and force-pushes and requires linear history, and the repo allows squash-merge only. |
 | **Inherit** | Everything the site uses but didn't write: GitHub Actions, CI tooling, fonts, and third-party services | The CI `inherit` job passes. Actions are pinned to commit SHAs and container images by digest. The page loads nothing from third parties beyond the CSP allowlist. Fonts match their recorded checksums. CI tooling has no high or critical vulnerabilities, no OSV findings, and only allowlisted licenses. Install scripts are denied unless reviewed. |
-| **Build** | CI checks: tests, HTML validation, page-weight budget, browser tests, secret scan, and static analysis | *Planned* |
-| **Deploy** | GitHub Pages, deployed automatically on merge after CI passes, with a smoke test afterward | *Planned* (today, a push to `main` deploys once `test` and `inherit` pass) |
+| **Build** | CI (`.github/workflows/ci.yml`) runs `test` (unit tests), `verify` (html-validate, then Playwright on phone and desktop against exactly what ships, including a 150 KB budget for what the site itself serves), `secrets` (gitleaks over the full history), and `sast` (Semgrep CE). Semgrep's rulesets come from semgrep.dev on each run and aren't pinned, so a new rule can flag existing code. | Every required check passes on the PR: `test`, `inherit`, `verify`, `secrets`, and `sast`. Semgrep has no findings at any severity, and gitleaks finds no leaks. |
+| **Deploy** | GitHub Pages, deployed automatically on merge after CI passes, with a smoke test afterward | *Partly live*: `deploy.yml` runs only after CI succeeds on a push to `main`, and only if that commit is still `main`'s tip, so a re-run can't roll the site back. To redeploy without a new commit, re-run the latest Deploy run. The post-deploy smoke test is still planned. |
 | **Operate** | Weekly checks of the live site, the domain, and email DNS | *Planned* |
 
 ### Develop
@@ -119,8 +139,8 @@ This repo uses a DevSecOps pipeline with five stages. Work can't move on until e
 ## Deployment
 The site is hosted on **GitHub Pages** from `Original-Carl/kp-pto`. The domain is registered at **Squarespace Domains**, which only provides DNS here; Squarespace can't host a hand-built site.
 
-- Every pull request and every push to `main` runs the tests (`.github/workflows/deploy.yml`).
-- A push to `main` also publishes `index.html`, `css/`, `js/`, `fonts/`, and `assets/` to Pages.
+- Every pull request and every push to `main` runs CI (`.github/workflows/ci.yml`).
+- When CI passes on a push to `main`, `.github/workflows/deploy.yml` publishes that commit's `index.html`, `css/`, `js/`, `fonts/`, and `assets/` to Pages, staged by `scripts/stage-site.mjs`.
 - `main` is protected, so all changes go through a PR.
 
 ### Pointing kp-pto.org at GitHub Pages (one-time setup)
