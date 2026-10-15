@@ -67,5 +67,32 @@ You need Node 18 or newer. No install step is required.
 node --test
 ```
 
-## Deploying later
-Hosting isn't chosen yet. Any static host works: Vercel, Netlify, GitHub Pages, or Cloudflare Pages. The domain **kp-pto.org** is registered at **Squarespace Domains**, so DNS changes for whichever host you pick happen in the Squarespace domain dashboard. Leave any existing MX records alone so `@kp-pto.org` email keeps working.
+## Deployment
+The site is hosted on **GitHub Pages** from `Original-Carl/kp-pto`. The domain is registered at **Squarespace Domains**, which only provides DNS here; Squarespace can't host a hand-built site.
+
+- Every pull request and every push to `main` runs the tests (`.github/workflows/deploy.yml`).
+- A push to `main` also publishes `index.html`, `css/`, `js/`, `fonts/`, and `assets/` to Pages.
+- `main` is protected, so all changes go through a PR.
+
+### Pointing kp-pto.org at GitHub Pages (one-time setup)
+1. Prove you own the domain to GitHub. This stops anyone else from claiming it.
+   - Go to GitHub → *Settings* (your account) → *Pages* → *Add a verified domain* → `kp-pto.org`.
+   - Add the TXT record GitHub shows to Squarespace DNS, then click *Verify*.
+2. In Squarespace → *Domains* → kp-pto.org → *DNS*, remove the **Squarespace Defaults** records. **Keep the email records** (MX, plus any SPF/DKIM TXT or CNAME records).
+3. Add these records:
+
+| Type | Host | Value |
+|------|------|-------|
+| A | @ | 185.199.108.153 |
+| A | @ | 185.199.109.153 |
+| A | @ | 185.199.110.153 |
+| A | @ | 185.199.111.153 |
+| AAAA | @ | 2606:50c0:8000::153 |
+| AAAA | @ | 2606:50c0:8001::153 |
+| AAAA | @ | 2606:50c0:8002::153 |
+| AAAA | @ | 2606:50c0:8003::153 |
+| CNAME | www | original-carl.github.io |
+
+4. In the repo, go to *Settings* → *Pages* → *Custom domain*, enter `kp-pto.org`, and save. Once the certificate is issued (from a few minutes up to about an hour), tick **Enforce HTTPS**.
+
+Until the custom domain is set, the site is served at https://original-carl.github.io/kp-pto/.
