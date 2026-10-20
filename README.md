@@ -3,10 +3,9 @@
 A static site in plain HTML, CSS, and JavaScript, with six pages plus a 404 page. There is no build step and there are no dependencies.
 
 It's built mobile-first for phones on slow connections:
-- No frameworks and no third-party requests, except the Zeffy forms.
+- No frameworks and no third-party requests. Payments hand off to Zeffy's own pages; nothing is embedded.
 - Two self-hosted web fonts that match the school's site: Fjalla One for headings and Lato 400/700 for body text. They are latin-subset woff2 files in `fonts/`, about 66 KB in total, and use `font-display: swap`. Both are licensed under the SIL Open Font License, and the license texts are in `fonts/`.
 - The logo is inline SVG.
-- Zeffy forms load lazily, so they don't load until a visitor scrolls near them.
 
 ## Files
 
@@ -15,13 +14,13 @@ It's built mobile-first for phones on slow connections:
 | `index.html` | Home: mission banner and links to each page |
 | `about.html` | Mission, programs, and organization details (legal name, EIN, address), plus JSON-LD |
 | `events.html` | Upcoming events (from `js/events.js`) |
-| `support.html` | Zeffy contribution and vending forms |
+| `support.html` | What contributions fund, links to the Zeffy forms, and other ways to give |
 | `volunteer.html` | Volunteer roles and sign-up |
 | `contact.html` | Email, mailing address, and board |
 | `404.html` | Shown by GitHub Pages for unknown URLs |
 | `css/styles.css` | Styles. Colors are CSS variables at the top of the file. |
 | `js/events.js` | **The events list.** Edit this file to post events. |
-| `js/main.js` | Menu toggle, events rendering, and Zeffy embeds |
+| `js/main.js` | Menu toggle and events rendering |
 | `assets/favicon.svg` | Browser-tab icon |
 | `fonts/` | Self-hosted woff2 fonts, their OFL licenses, and `sources.json` (origin and checksum for each font) |
 | `tests/` | Unit tests: events logic, the Inherit checks, and page consistency (`pages.test.mjs`) |
@@ -45,20 +44,20 @@ These must match what's registered with Google for Nonprofits exactly. They appe
 ### Content still to add
 Run `node scripts/check-content.mjs`; CI also prints this list on every run. Sections without content are left out of the page rather than shown as placeholders:
 
-- **Zeffy URLs** for the contributions and vending forms on `support.html`
+- **Zeffy link** for the vending form on `support.html`
 - **Volunteer roles and a sign-up link** on `volunteer.html` (there's a commented template)
 - **Board members** on `contact.html` (there's a commented template; list only people who've agreed)
-- **Programs and services** on `about.html`
 - Check that the public email `info@kp-pto.org` exists
 - The official logo, if there is one: replace the inline "KP" SVG in every page's header and `assets/favicon.svg`
 - **At launch:** remove the pre-launch `<meta name="robots" content="noindex, nofollow">` tag from every page
 
 ### Zeffy forms
-1. In Zeffy, open the form and choose **Share → Embed**.
-2. Copy the `src` URL from the embed code. It starts with `https://www.zeffy.com/`.
-3. Paste that URL into the matching `data-zeffy-src="..."` in `support.html`.
+The site links to Zeffy's own pages and doesn't embed the forms, so visitors pay on zeffy.com.
 
-The script only builds the iframe from `https://www.zeffy.com/` URLs, and the CSP's `frame-src` (in every page's `<head>`) allows only that host. If Zeffy ever gives you a URL on a different host, update both. Until a real URL is in place, the card shows "form coming soon". If a form gets cut off, raise the height in `.zeffy-embed.is-loaded` in `css/styles.css`.
+1. In Zeffy, open the form and choose **Share → Copy link**. The link starts with `https://www.zeffy.com/`.
+2. In `support.html`, set the `href` of the matching button: `data-zeffy-form="contributions"` or `data-zeffy-form="vending"`.
+
+There's a commented template for the vending button. For an event's ticket or donation page, add `link` and `linkText` to that event in `js/events.js`.
 
 ### Events
 Add entries to `js/events.js`:
@@ -72,7 +71,7 @@ Events are sorted by date, and past events hide automatically.
 ## Running locally
 
 ```bash
-python3 -m http.server 8080 --directory .
+node scripts/stage-site.mjs && node scripts/serve.mjs 8080
 ```
 
 Then open http://localhost:8080.
@@ -97,7 +96,7 @@ Then, from `tools/ci`, validate the HTML:
 npx html-validate ../../*.html
 ```
 
-And run the browser tests. They stage `_site/` and serve it with Python:
+And run the browser tests. They stage `_site/` and serve it with `scripts/serve.mjs`, which uses Node built-ins only:
 
 ```bash
 npx playwright test
@@ -133,7 +132,7 @@ This repo uses a DevSecOps pipeline with five stages. Work can't move on until e
 | Control | Where | Run locally |
 |---------|-------|-------------|
 | GitHub Actions are pinned to full commit SHAs, and container images by digest | `scripts/check-inherit.mjs` | `node scripts/check-inherit.mjs` |
-| The CSP allows only `'self'`, plus `data:` images and `https://www.zeffy.com` frames. Every resource the page loads (scripts, styles, fonts, images, CSS `url()`) is same-origin. | `scripts/check-inherit.mjs` (`CSP_ALLOWED`) | same |
+| The CSP allows only `'self'` and `data:` images, with `frame-src 'none'`. Every resource the page loads (scripts, styles, fonts, images, CSS `url()`) is same-origin. | `scripts/check-inherit.mjs` (`CSP_ALLOWED`) | same |
 | Self-hosted fonts must match the sha256 recorded in `fonts/sources.json`. A new font needs an entry there. | `scripts/check-inherit.mjs` | same |
 | CI tooling lives in `tools/ci` with its own lockfile and is never shipped. The site itself has no dependencies. | `tools/ci/package.json` | — |
 | Vulnerable tooling (high or critical) fails CI | `inherit` job, `npm audit` | `cd tools/ci && npm audit --audit-level=high` |
@@ -146,7 +145,7 @@ This repo uses a DevSecOps pipeline with five stages. Work can't move on until e
 | Security updates arrive immediately, one PR per advisory | Repo setting (Dependabot security updates) | — |
 
 **Third-party services:**
-- **At runtime:** Zeffy (payment forms, in an iframe; the only third-party origin the page contacts) and GitHub Pages (hosting).
+- **At runtime:** GitHub Pages (hosting). The page contacts no other origin. Payments link out to Zeffy's site.
 - **Behind the scenes:** Squarespace (domain registration and DNS) and Google Workspace (`@kp-pto.org` email).
 - **Fonts:** Fjalla One and Lato come from Google Fonts but are downloaded once and self-hosted under the SIL OFL 1.1, so there's no runtime request to Google.
 

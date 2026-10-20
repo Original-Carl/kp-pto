@@ -18,7 +18,6 @@ import { fileURLToPath } from "node:url";
 // Directive -> sources allowed beyond 'self' / 'none'. Anything else fails.
 export const CSP_ALLOWED = {
   "img-src": ["data:"],
-  "frame-src": ["https://www.zeffy.com"],
 };
 
 const SITE = "https://kp-pto.org";

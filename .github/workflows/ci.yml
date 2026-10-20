@@ -35,7 +35,7 @@ jobs:
         with:
           node-version-file: .nvmrc
       - run: node --test
-      # Not a gate: lists content still to add (Zeffy URLs, volunteer roles, …)
+      # Not a gate: lists content still to add (Zeffy links, volunteer roles, …)
       # in the run summary so it's visible on every PR.
       - name: Content still to add
         run: node scripts/check-content.mjs

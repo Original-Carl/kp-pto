@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; frame-src https://www.zeffy.com; base-uri 'self'; form-action 'self'">
+        content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; frame-src 'none'; base-uri 'self'; form-action 'self'">
   <title>Support | King Philip Middle School PTO</title>
   <!-- PRE-LAUNCH: keeps search engines from listing the site. Remove at launch. -->
   <meta name="robots" content="noindex, nofollow">
@@ -57,33 +57,44 @@
     <section class="page-hero">
       <div class="container">
         <h1>Support the PTO</h1>
-        <p class="lead">Contributions and vending purchases are processed securely by Zeffy.</p>
+        <p class="lead">Contributions and vending purchases are handled securely by Zeffy.</p>
       </div>
     </section>
 
-    <section class="section" aria-label="Payment forms">
+    <section class="section" aria-label="Ways to pay online">
       <div class="container">
         <div class="card-grid">
           <article class="card">
             <h2>Contributions</h2>
-            <!-- Paste the Zeffy embed URL (https://www.zeffy.com/embed/...) into data-zeffy-src. -->
-            <div class="zeffy-embed"
-                 data-zeffy-src=""
-                 data-zeffy-title="Contribution form powered by Zeffy">
-              <p class="empty-note">Contribution form coming soon.</p>
-            </div>
+            <p>Your contributions support:</p>
+            <ul class="program-list">
+              <li>Teacher and classroom funds</li>
+              <li>Enrichment programs</li>
+              <li>Field trips</li>
+              <li>Special events</li>
+              <li>Scholarship fund</li>
+            </ul>
+            <!-- Zeffy's share link for the form (Share → Copy link). -->
+            <a class="btn btn-primary" data-zeffy-form="contributions"
+               href="https://www.zeffy.com/en-US/donation-form/kp-pto-202020-campaign">Donate on Zeffy</a>
           </article>
           <article class="card">
             <h2>Vending</h2>
-            <!-- Paste the Zeffy embed URL (https://www.zeffy.com/embed/...) into data-zeffy-src. -->
-            <div class="zeffy-embed"
-                 data-zeffy-src=""
-                 data-zeffy-title="Vending form powered by Zeffy">
-              <p class="empty-note">Vending form coming soon.</p>
-            </div>
+            <p class="empty-note">Vending form coming soon.</p>
+            <!-- When the vending form is ready, replace the note above with:
+            <a class="btn btn-primary" data-zeffy-form="vending" href="https://www.zeffy.com/...">Buy on Zeffy</a> -->
           </article>
         </div>
-        <noscript><p class="empty-note">Turn on JavaScript to load the payment forms.</p></noscript>
+      </div>
+    </section>
+
+    <section class="section section-alt" aria-labelledby="other-ways-heading">
+      <div class="container narrow">
+        <h2 id="other-ways-heading">Other Ways to Give</h2>
+        <ul class="check-list">
+          <li><strong>Check:</strong> make it payable to “KP PTO” and drop it off at the KP Main Office.</li>
+          <li><strong>Cash:</strong> put it in an envelope labeled with your student’s name and “KP PTO”, and drop it off at the KP Main Office.</li>
+        </ul>
       </div>
     </section>
   </main>

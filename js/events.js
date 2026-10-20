@@ -1,6 +1,6 @@
 // Edit this list to post events. Past events hide automatically; order doesn't matter.
 // date: "YYYY-MM-DD" (required). end: last day of a multi-day event (optional).
-// time and location are optional.
+// time, location, link (an https URL, e.g. a Zeffy ticket page), and linkText are optional.
 //
 // Source: "KP Calendar of Events 2026-2027" (school calendar PDF), family-facing
 // items only. Left out: staff-only deadlines (grades/progress reports due,
@@ -35,7 +35,11 @@ window.PTO_EVENTS = [
   { date: "2026-10-27", title: "Picture Retake Day" },
   { date: "2026-10-27", title: "Grade 6 Halloween Mixer", time: "3–4 PM" },
   { date: "2026-10-28", title: "Choir MidFest" },
-  { date: "2026-10-30", title: "7th & 8th Grade Halloween Mixer", time: "6–8 PM" },
+  {
+    date: "2026-10-30", title: "7th & 8th Grade Halloween Mixer", time: "6–8 PM", location: "Grade 7 & 8 Gym",
+    link: "https://www.zeffy.com/en-US/ticketing/2026-grade-7-and-8-halloween-mixer",
+    linkText: "Tickets on Zeffy",
+  },
 
   // November 2026
   { date: "2026-11-01", end: "2026-11-07", title: "School Psychology Week" },

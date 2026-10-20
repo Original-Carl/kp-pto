@@ -3,9 +3,7 @@
 import { test, expect } from "@playwright/test";
 
 // Bytes a first visit to one page downloads from the site itself (page, CSS, JS, fonts).
-// Zeffy's lazy, cross-origin iframe isn't counted: browsers don't expose its size.
 const PAGE_WEIGHT_BUDGET = 150 * 1024;
-const ZEFFY_TEST_URL = "https://www.zeffy.com/embed/donation-form/playwright-test";
 
 // Every tab, in nav order, with the heading its page should show.
 const PAGES = [
@@ -166,10 +164,9 @@ test("mobile menu opens, closes, and Escape returns focus", async ({ page }, tes
   await expect(toggle).toBeFocused();
 });
 
-test("unknown URLs get the site's 404 page", async ({ page, baseURL }, testInfo) => {
+test("unknown URLs get the site's 404 page", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile", "one check is enough");
-  // Python's test server doesn't serve 404.html; GitHub Pages does.
-  test.skip(new URL(baseURL).hostname === "127.0.0.1", "only a deployed site serves 404.html");
+  // GitHub Pages serves 404.html for unknown paths; scripts/serve.mjs does the same.
   const res = await page.goto("this-page-does-not-exist");
   expect(res.status()).toBe(404);
   await expect(page.locator("h1")).toHaveText("Page not found");
@@ -216,37 +213,41 @@ test("events: empty list shows the 'no events' note", async ({ page }) => {
   await expect(page.locator("#events-empty")).toBeVisible();
 });
 
-// ---------- Support: Zeffy ----------
+// ---------- Support: hand-off to Zeffy (no embeds) ----------
 
-test("Zeffy: each card shows its form, or 'coming soon' until a URL is set", async ({ page }) => {
-  await page.route("https://www.zeffy.com/**", (route) => route.fulfill({ contentType: "text/html", body: "<p>stub</p>" }));
+test("Support hands off to Zeffy's own pages; nothing is embedded", async ({ page }) => {
   await page.goto("support.html");
-  const cards = page.locator(".zeffy-embed");
-  await expect(cards).toHaveCount(2);
-  for (const card of await cards.all()) {
-    if (await card.locator("iframe").count()) {
-      await expect(card.locator("iframe")).toHaveAttribute("src", /^https:\/\/www\.zeffy\.com\//);
-    } else {
-      await expect(card.locator(".empty-note")).toHaveText(/coming soon/);
-    }
+  await expect(page.locator("iframe")).toHaveCount(0);
+  const donate = page.locator('a[data-zeffy-form="contributions"]');
+  await expect(donate).toHaveCount(1);
+  await expect(donate).toHaveAttribute("href", /^https:\/\/www\.zeffy\.com\//);
+  // Vending: a Zeffy link once it exists, otherwise a "coming soon" note.
+  const vending = page.locator('a[data-zeffy-form="vending"]');
+  if (await vending.count()) {
+    await expect(vending).toHaveAttribute("href", /^https:\/\/www\.zeffy\.com\//);
+  } else {
+    await expect(page.getByText("Vending form coming soon.")).toBeVisible();
   }
 });
 
-test("Zeffy: a real embed URL becomes a lazy, titled iframe", async ({ page }) => {
-  await page.route("https://www.zeffy.com/**", (route) => route.fulfill({ contentType: "text/html", body: "<p>stub</p>" }));
-  await page.route((url) => url.pathname.endsWith("/support.html"), async (route) => {
-    const response = await route.fetch();
-    const original = await response.text();
-    // Point the first card at the test URL, whatever it holds today; clear the second.
-    let n = 0;
-    const html = original.replace(/data-zeffy-src="[^"]*"/g, () => (n++ === 0 ? `data-zeffy-src="${ZEFFY_TEST_URL}"` : 'data-zeffy-src=""'));
-    expect(n, "expected two Zeffy cards in support.html").toBe(2);
-    await route.fulfill({ response, body: html });
-  });
+test("Support lists other ways to give and what contributions fund", async ({ page }) => {
   await page.goto("support.html");
-  const iframe = page.locator(".zeffy-embed iframe");
-  await expect(iframe).toHaveCount(1);
-  await expect(iframe).toHaveAttribute("src", ZEFFY_TEST_URL);
-  await expect(iframe).toHaveAttribute("title", "Contribution form powered by Zeffy");
-  await expect(iframe).toHaveAttribute("loading", "lazy");
+  await expect(page.locator("#other-ways-heading")).toHaveText("Other Ways to Give");
+  await expect(page.getByText("payable to “KP PTO”")).toBeVisible();
+  await expect(page.locator(".program-list").first().locator("li")).toHaveCount(5);
+});
+
+test("events: an https link renders; other schemes don't", async ({ page }) => {
+  await page.route("**/js/events.js", (route) => route.fulfill({
+    contentType: "text/javascript",
+    body: `window.PTO_EVENTS = ${JSON.stringify([
+      { date: isoDate(1), title: "With link", link: "https://www.zeffy.com/en-US/ticketing/test", linkText: "Tickets" },
+      { date: isoDate(2), title: "Bad link", link: "javascript:alert(1)", linkText: "Nope" },
+    ])};`,
+  }));
+  await page.goto("events.html");
+  const links = page.locator("#event-list .event-link");
+  await expect(links).toHaveCount(1);
+  await expect(links).toHaveText("Tickets");
+  await expect(links).toHaveAttribute("href", "https://www.zeffy.com/en-US/ticketing/test");
 });

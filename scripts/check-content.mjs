@@ -6,13 +6,19 @@ import { appendFileSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+export const ZEFFY_FORMS = ["contributions", "vending"];
+
 export function contentGaps(pages) {
   const gaps = [];
   for (const [file, html] of Object.entries(pages)) {
-    for (const [tag] of html.replace(/<!--[\s\S]*?-->/g, "").matchAll(/<div\b[^>]*\bclass="[^"]*\bzeffy-embed\b[^"]*"[^>]*>/g)) {
-      const src = /\bdata-zeffy-src="([^"]*)"/.exec(tag)?.[1] ?? "";
-      const title = /\bdata-zeffy-title="([^"]*)"/.exec(tag)?.[1] ?? "Zeffy form";
-      if (!src.trim().startsWith("https://www.zeffy.com/")) gaps.push(`${file}: no Zeffy URL yet for "${title}"`);
+    if (file !== "support.html") continue;
+    // Each Zeffy form is a hand-off link: <a data-zeffy-form="…" href="https://www.zeffy.com/…">.
+    const links = [...html.replace(/<!--[\s\S]*?-->/g, "").matchAll(/<a\b[^>]*>/g)].map(([tag]) => ({
+      form: /(?:^|\s)data-zeffy-form="([^"]*)"/.exec(tag)?.[1],
+      href: /(?:^|\s)href="([^"]*)"/.exec(tag)?.[1] ?? "",
+    }));
+    for (const form of ZEFFY_FORMS) {
+      if (!links.some((l) => l.form === form && l.href.startsWith("https://www.zeffy.com/"))) gaps.push(`${file}: no Zeffy link yet for ${form}`);
     }
   }
   const noindex = Object.keys(pages).filter((f) => /<meta name="robots" content="noindex/.test(pages[f]));

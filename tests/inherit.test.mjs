@@ -31,8 +31,10 @@ test("action pins: tags, short SHAs, and tagged images fail", () => {
 });
 
 test("CSP: the site's policy passes", () => {
-  const html = csp("default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; frame-src https://www.zeffy.com; base-uri 'self'; form-action 'self'");
+  const html = csp("default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; frame-src 'none'; base-uri 'self'; form-action 'self'");
   assert.deepEqual(checkCsp(html), []);
+  // The site links out to Zeffy instead of embedding it, so no frame origin is allowed.
+  assert.equal(checkCsp(csp("default-src 'self'; frame-src https://www.zeffy.com")).length, 1);
 });
 
 test("CSP: missing policy, missing default-src, and new origins fail", () => {

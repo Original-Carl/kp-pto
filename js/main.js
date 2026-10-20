@@ -1,6 +1,5 @@
 "use strict";
 
-const ZEFFY_ORIGIN = "https://www.zeffy.com/";
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -39,8 +38,13 @@ function dateRangeLabel(start, end) {
     : `${startLabel} – ${MONTHS[end.getMonth()]} ${end.getDate()}`;
 }
 
-function isZeffyUrl(value) {
-  return typeof value === "string" && value.trim().startsWith(ZEFFY_ORIGIN);
+// Event links must be https; anything else (javascript:, http:, typos) is not rendered.
+function isSafeLink(value) {
+  try {
+    return new URL(String(value)).protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 function renderEvents(listEl, emptyEl, events, today) {
@@ -90,23 +94,16 @@ function renderEvents(listEl, emptyEl, events, today) {
       body.append(metaEl);
     }
 
+    if (event.link && isSafeLink(event.link)) {
+      const link = document.createElement("a");
+      link.className = "event-link";
+      link.href = event.link;
+      link.textContent = event.linkText || "Details";
+      body.append(link);
+    }
+
     item.append(date, body);
     listEl.append(item);
-  }
-}
-
-// Replace each placeholder with a Zeffy iframe once a real embed URL is filled in.
-function initZeffyEmbeds() {
-  for (const container of document.querySelectorAll(".zeffy-embed")) {
-    const src = (container.dataset.zeffySrc || "").trim();
-    if (!isZeffyUrl(src)) continue;
-    const iframe = document.createElement("iframe");
-    iframe.src = src;
-    iframe.title = container.dataset.zeffyTitle || "Form powered by Zeffy";
-    iframe.loading = "lazy";
-    iframe.allow = "payment";
-    container.replaceChildren(iframe);
-    container.classList.add("is-loaded");
   }
 }
 
@@ -132,7 +129,6 @@ function initNav() {
 if (typeof document !== "undefined") {
   document.addEventListener("DOMContentLoaded", () => {
     initNav();
-    initZeffyEmbeds();
     const listEl = document.getElementById("event-list");
     const emptyEl = document.getElementById("events-empty");
     if (listEl && emptyEl) renderEvents(listEl, emptyEl, window.PTO_EVENTS, new Date());
@@ -142,5 +138,5 @@ if (typeof document !== "undefined") {
 }
 
 if (typeof module !== "undefined") {
-  module.exports = { parseLocalDate, upcomingEvents, dateRangeLabel, isZeffyUrl };
+  module.exports = { parseLocalDate, upcomingEvents, dateRangeLabel, isSafeLink };
 }
