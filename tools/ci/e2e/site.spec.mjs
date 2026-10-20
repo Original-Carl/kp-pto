@@ -263,3 +263,14 @@ test("robots.txt and sitemap.xml are served", async ({ request }, testInfo) => {
   expect(sitemap.status()).toBe(200);
   expect(await sitemap.text()).toContain("<loc>https://kp-pto.org/about.html</loc>");
 });
+
+test("version.json says which commit is live", async ({ request }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "one check is enough");
+  const res = await request.get("version.json");
+  expect(res.status()).toBe(200);
+  const { commit, built_at } = await res.json();
+  expect(commit).toMatch(/^[0-9a-f]{40}$/);
+  expect(Number.isNaN(Date.parse(built_at))).toBe(false);
+  // The deploy's smoke job sets this to the commit it just deployed.
+  if (process.env.EXPECTED_COMMIT) expect(commit).toBe(process.env.EXPECTED_COMMIT);
+});
