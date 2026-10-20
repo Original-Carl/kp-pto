@@ -213,28 +213,17 @@ test("events: empty list shows the 'no events' note", async ({ page }) => {
   await expect(page.locator("#events-empty")).toBeVisible();
 });
 
-// ---------- Support: hand-off to Zeffy (no embeds) ----------
+// ---------- Support ----------
 
-test("Support hands off to Zeffy's own pages; nothing is embedded", async ({ page }) => {
+test("Support lists what contributions fund and ways to give; nothing is embedded", async ({ page }) => {
   await page.goto("support.html");
   await expect(page.locator("iframe")).toHaveCount(0);
-  const donate = page.locator('a[data-zeffy-form="contributions"]');
-  await expect(donate).toHaveCount(1);
-  await expect(donate).toHaveAttribute("href", /^https:\/\/www\.zeffy\.com\//);
-  // Vending: a Zeffy link once it exists, otherwise a "coming soon" note.
-  const vending = page.locator('a[data-zeffy-form="vending"]');
-  if (await vending.count()) {
-    await expect(vending).toHaveAttribute("href", /^https:\/\/www\.zeffy\.com\//);
-  } else {
-    await expect(page.getByText("Vending form coming soon.")).toBeVisible();
-  }
-});
-
-test("Support lists other ways to give and what contributions fund", async ({ page }) => {
-  await page.goto("support.html");
-  await expect(page.locator("#other-ways-heading")).toHaveText("Other Ways to Give");
+  await expect(page.locator(".program-list li")).toHaveCount(5);
+  await expect(page.locator("#ways-heading")).toHaveText("Ways to Give");
   await expect(page.getByText("payable to “KP PTO”")).toBeVisible();
-  await expect(page.locator(".program-list").first().locator("li")).toHaveCount(5);
+  // Online giving lives with each campaign or event, so Support points at Events.
+  await page.locator("main").getByRole("link", { name: "Events" }).click();
+  await expect(page.locator("h1")).toHaveText("Events");
 });
 
 test("events: an https link renders; other schemes don't", async ({ page }) => {

@@ -14,7 +14,7 @@ It's built mobile-first for phones on slow connections:
 | `index.html` | Home: mission banner and links to each page |
 | `about.html` | Mission, programs, and organization details (legal name, EIN, address), plus JSON-LD |
 | `events.html` | Upcoming events (from `js/events.js`) |
-| `support.html` | What contributions fund, links to the Zeffy forms, and other ways to give |
+| `support.html` | What contributions fund and ways to give (online via event links, check, cash) |
 | `volunteer.html` | Volunteer roles and sign-up |
 | `contact.html` | Email, mailing address, and board |
 | `404.html` | Shown by GitHub Pages for unknown URLs |
@@ -44,19 +44,19 @@ These must match what's registered with Google for Nonprofits exactly. They appe
 ### Content still to add
 Run `node scripts/check-content.mjs`; CI also prints this list on every run. Sections without content are left out of the page rather than shown as placeholders:
 
-- **Zeffy link** for the vending form on `support.html`
 - **Volunteer roles and a sign-up link** on `volunteer.html` (there's a commented template)
 - Board changes go in `contact.html` (`.board-grid`); list only people who've agreed
 - The official logo, if there is one: replace the inline "KP" SVG in every page's header and `assets/favicon.svg`
 - **At launch:** remove the pre-launch `<meta name="robots" content="noindex, nofollow">` tag from every page
 
-### Zeffy forms
-The site links to Zeffy's own pages and doesn't embed the forms, so visitors pay on zeffy.com.
+### Zeffy links
+The PTO creates a Zeffy link for each campaign or event that collects money. The site links out to Zeffy and doesn't embed anything. Each link goes on its event in `js/events.js`:
 
-1. In Zeffy, open the form and choose **Share → Copy link**. The link starts with `https://www.zeffy.com/`.
-2. In `support.html`, set the `href` of the matching button: `data-zeffy-form="contributions"` or `data-zeffy-form="vending"`.
+```js
+{ date: "2026-10-30", title: "7th & 8th Grade Halloween Mixer", link: "https://www.zeffy.com/en-US/ticketing/…", linkText: "Tickets on Zeffy" },
+```
 
-There's a commented template for the vending button. For an event's ticket or donation page, add `link` and `linkText` to that event in `js/events.js`.
+To get the link, open the form in Zeffy and choose **Share → Copy link**. Only `https://` links are shown. The Support page sends people to the Events page for online giving.
 
 ### Events
 Add entries to `js/events.js`:
