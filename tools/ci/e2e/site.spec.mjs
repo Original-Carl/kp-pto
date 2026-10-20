@@ -78,6 +78,13 @@ for (const p of ALL_PAGES) {
       await expect(page.locator("h1")).toHaveText(p.h1);
     });
 
+    test("header logo loads", async ({ page }) => {
+      await page.goto(p.path);
+      const logo = page.locator(".site-header img.brand-logo");
+      await expect(logo).toBeVisible();
+      expect(await logo.evaluate((img) => img.complete && img.naturalWidth > 0)).toBe(true);
+    });
+
     test("footer shows the legal name, EIN, and street address", async ({ page }) => {
       await page.goto(p.path);
       const footer = page.locator(".site-footer");
@@ -273,4 +280,22 @@ test("version.json says which commit is live", async ({ request }, testInfo) => 
   expect(Number.isNaN(Date.parse(built_at))).toBe(false);
   // The deploy's smoke job sets this to the commit it just deployed.
   if (process.env.EXPECTED_COMMIT) expect(commit).toBe(process.env.EXPECTED_COMMIT);
+});
+
+test("Donate is one click to the Zeffy donation form, from Home and Support", async ({ page }) => {
+  for (const path of ["./", "support.html"]) {
+    await page.goto(path);
+    const donate = page.locator('main a[data-zeffy-form="donate"]');
+    await expect(donate).toHaveCount(1);
+    await expect(donate).toHaveText("Donate");
+    await expect(donate).toHaveAttribute("href", /^https:\/\/www\.zeffy\.com\/[^"]*donation-form\//);
+  }
+});
+
+test("Home shows the PTO logo", async ({ page }) => {
+  await page.goto("./");
+  const logo = page.locator(".hero-logo img");
+  await expect(logo).toBeVisible();
+  expect(await logo.evaluate((img) => img.complete && img.naturalWidth > 0)).toBe(true);
+  await expect(logo).toHaveAttribute("alt", /KP PTO logo/);
 });

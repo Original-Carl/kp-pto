@@ -5,7 +5,7 @@ A static site in plain HTML, CSS, and JavaScript, with six pages plus a 404 page
 It's built mobile-first for phones on slow connections:
 - No frameworks and no third-party requests. Payments hand off to Zeffy's own pages; nothing is embedded.
 - Two self-hosted web fonts that match the school's site: Fjalla One for headings and Lato 400/700 for body text. They are latin-subset woff2 files in `fonts/`, about 66 KB in total, and use `font-display: swap`. Both are licensed under the SIL Open Font License, and the license texts are in `fonts/`.
-- The logo is inline SVG.
+- The PTO logos are small WebP files: 3.9 KB in the header, 36 KB on Home. The full-size originals live in `brand/` and are never shipped.
 
 ## Files
 
@@ -22,7 +22,8 @@ It's built mobile-first for phones on slow connections:
 | `css/styles.css` | Styles. Colors are CSS variables at the top of the file. |
 | `js/events.js` | **The events list.** Edit this file to post events. |
 | `js/main.js` | Menu toggle and events rendering |
-| `assets/favicon.svg` | Browser-tab icon |
+| `assets/` | Browser-tab icon (`favicon.svg`) and the site's logo images (`logo-header.webp`, `logo-home.webp`) |
+| `brand/` | Full-size logos for flyers and social posts (not shipped); see `brand/README.md` |
 | `fonts/` | Self-hosted woff2 fonts, their OFL licenses, and `sources.json` (origin and checksum for each font) |
 | `tests/` | Unit tests: events logic, the Inherit checks, page consistency (`pages.test.mjs`), and `version.json` (`stage-site.test.mjs`) |
 | `docs/RUNBOOK.md` | How deploys work, rollback, redeploying, content updates, and the DNS records to keep |
@@ -48,10 +49,12 @@ Run `node scripts/check-content.mjs`; CI also prints this list on every run. Sec
 
 - **Volunteer roles and a sign-up link** on `volunteer.html` (there's a commented template)
 - Board changes go in `contact.html` (`.board-grid`); list only people who've agreed
-- The official logo, if there is one: replace the inline "KP" SVG in every page's header and `assets/favicon.svg`
 
 ### Zeffy links
-The PTO creates a Zeffy link for each campaign or event that collects money. The site links out to Zeffy and doesn't embed anything. Each link goes on its event in `js/events.js`:
+The site links out to Zeffy and doesn't embed anything.
+
+- **General donations:** the **Donate** buttons on Home and Support (`data-zeffy-form="donate"`) go straight to the PTO's general Zeffy donation form. To change the form, update both `href`s.
+- **Events and campaigns:** each gets its own Zeffy link, which goes on its event in `js/events.js`:
 
 ```js
 { date: "2026-10-30", title: "7th & 8th Grade Halloween Mixer", link: "https://www.zeffy.com/en-US/ticketing/…", linkText: "Tickets on Zeffy" },
