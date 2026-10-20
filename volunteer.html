@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; frame-src https://www.zeffy.com; base-uri 'self'; form-action 'self'">
+  <title>Volunteer | King Philip Middle School PTO</title>
+  <!-- PRE-LAUNCH: keeps search engines from listing the site. Remove at launch. -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Volunteer with the King Philip Middle School PTO.">
+  <link rel="canonical" href="https://kp-pto.org/volunteer.html">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kp-pto.org/volunteer.html">
+  <meta property="og:title" content="Volunteer | King Philip Middle School PTO">
+  <meta property="og:description" content="Volunteer with the King Philip Middle School PTO.">
+  <meta name="theme-color" content="#2e318e">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <!-- Self-hosted school-site fonts (see css/styles.css @font-face). Preload the two used above the fold. -->
+  <link rel="preload" href="/fonts/lato-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/fjalla-one-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/main.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- SHARED HEADER: keep identical on every page (tests/pages.test.mjs checks). -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="King Philip Middle School PTO home">
+        <!-- Inline placeholder mark (saves a request). Swap for the official logo when there is one. -->
+        <svg class="brand-mark" viewBox="0 0 40 40" width="36" height="36" aria-hidden="true">
+          <rect width="40" height="40" rx="8" fill="currentColor"/>
+          <text x="20" y="26" text-anchor="middle" font-size="16" font-weight="700" font-family="system-ui, sans-serif" fill="#fff">KP</text>
+        </svg>
+        <span>KP PTO</span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span class="nav-toggle-bar" aria-hidden="true"></span>
+        <span class="visually-hidden">Menu</span>
+      </button>
+      <nav id="site-nav" class="site-nav" aria-label="Primary">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/about.html">About</a></li>
+          <li><a href="/events.html">Events</a></li>
+          <li><a href="/support.html">Support</a></li>
+          <li><a href="/volunteer.html" aria-current="page">Volunteer</a></li>
+          <li><a href="/contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container">
+        <h1>Volunteer</h1>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="volunteer-heading">
+      <div class="container narrow">
+        <h2 id="volunteer-heading">Get Involved</h2>
+        <p>Interested in volunteering with the PTO? Email us at
+          <a href="mailto:info@kp-pto.org">info@kp-pto.org</a>.</p>
+        <!-- Add volunteer roles and a sign-up link here when they're ready, e.g.:
+        <ul class="check-list"><li>Role</li></ul>
+        <a class="btn btn-primary" href="https://...">Sign up</a> -->
+      </div>
+    </section>
+  </main>
+
+  <!-- SHARED FOOTER: keep identical on every page (tests/pages.test.mjs checks). -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-org">
+        <p class="footer-name">King Philip Middle School PTO Inc.</p>
+        <address>C/O King Philip Middle School<br>100 King Philip Drive<br>West Hartford, CT 06117</address>
+        <p>EIN (Charity ID): 41-3002032</p>
+      </div>
+      <div class="footer-links">
+        <p><a href="mailto:info@kp-pto.org">info@kp-pto.org</a></p>
+        <p><a href="https://kingphilip.whps.org/">King Philip Middle School website</a></p>
+        <p class="fine-print">&copy; <span id="year">2026</span> King Philip Middle School PTO Inc.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

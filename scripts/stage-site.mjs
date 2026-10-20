@@ -1,13 +1,17 @@
 // Copies exactly the files that ship into _site/. Used by the deploy and by
 // the browser tests, so the tests run against what visitors get.
 // Run: node scripts/stage-site.mjs
-import { cpSync, rmSync, mkdirSync } from "node:fs";
+import { cpSync, rmSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const PUBLIC = ["index.html", "css", "js", "fonts", "assets"];
-
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "..");
+
+// Every top-level page, plus robots.txt / sitemap.xml once they exist, plus asset folders.
+export const PUBLIC = [
+  ...readdirSync(root).filter((f) => f.endsWith(".html") || f === "robots.txt" || f === "sitemap.xml").sort(),
+  "css", "js", "fonts", "assets",
+];
 const out = join(root, "_site");
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out);

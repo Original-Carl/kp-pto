@@ -200,7 +200,7 @@ a:focus-visible, button:focus-visible {
   text-decoration: none;
   font-weight: 700;
 }
-.site-nav a.is-active { color: var(--color-primary); box-shadow: inset 0 -3px 0 currentColor; }
+.site-nav a[aria-current="page"] { color: var(--color-primary); box-shadow: inset 0 -3px 0 currentColor; }
 
 /* Buttons */
 .btn {
@@ -217,17 +217,21 @@ a:focus-visible, button:focus-visible {
 .btn-primary { background: var(--color-primary); color: var(--color-primary-contrast); }
 .btn-secondary { background: transparent; color: var(--color-primary); }
 
-/* Sections */
-.hero {
+/* Sections. .hero is the home banner; .page-hero is the shorter banner on other pages. */
+.hero, .page-hero {
   padding: 48px 0 40px;
   background: var(--color-brand);
   color: #ffffff;
 }
-.hero h1 { color: #ffffff; }
-.hero .eyebrow, .hero .lead { color: rgba(255, 255, 255, 0.88); }
+.page-hero { padding: 32px 0 28px; }
+.page-hero h1 { margin: 0; }
+.page-hero .lead { margin: 12px 0 0; }
+.hero h1, .page-hero h1 { color: #ffffff; }
+.hero .eyebrow, .hero .lead, .page-hero .lead { color: rgba(255, 255, 255, 0.88); }
 .hero .btn-primary { background: #ffffff; color: var(--color-brand); border-color: #ffffff; }
 .hero .btn-secondary { color: #ffffff; border-color: #ffffff; }
-.hero a:focus-visible, .site-footer a:focus-visible { outline-color: #ffffff; }
+.hero a:focus-visible, .page-hero a:focus-visible, .site-footer a:focus-visible { outline-color: #ffffff; }
+address { font-style: normal; }
 .eyebrow {
   margin-bottom: 0.4em;
   color: var(--color-muted);
@@ -243,6 +247,34 @@ a:focus-visible, button:focus-visible {
 .section-alt { background: var(--color-bg-alt); }
 .section-intro { color: var(--color-muted); }
 .empty-note { color: var(--color-muted); font-style: italic; }
+
+/* Home: links to each page */
+.link-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.link-card {
+  display: block;
+  min-height: 44px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text);
+  text-decoration: none;
+}
+.link-card:hover { border-color: var(--color-primary); }
+.link-card-title {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  color: var(--color-primary);
+}
+.link-card-text { display: block; color: var(--color-muted); }
+
+/* About */
+.mission { font-size: 1.15rem; }
+.org-details { margin: 0; display: grid; gap: 4px 16px; }
+.org-details dt { font-weight: 700; color: var(--color-muted); font-size: 0.9rem; margin-top: 12px; }
+.org-details dt:first-child { margin-top: 0; }
+.org-details dd { margin: 0; overflow-wrap: anywhere; }
 
 /* Events */
 .event-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
@@ -306,6 +338,7 @@ a:focus-visible, button:focus-visible {
 .role { display: block; font-size: 0.85rem; color: var(--color-muted); font-weight: 700; }
 .name { display: block; font-weight: 700; overflow-wrap: anywhere; }
 .contact-line a { font-weight: 700; overflow-wrap: anywhere; }
+.contact-address { margin-bottom: 1em; }
 
 /* Footer */
 .site-footer {
@@ -316,6 +349,9 @@ a:focus-visible, button:focus-visible {
 }
 .site-footer a { color: inherit; }
 .site-footer p { margin: 0 0 6px; }
+.footer-inner { display: grid; gap: 16px; }
+.footer-name { font-weight: 700; }
+.site-footer address { margin: 0 0 6px; }
 .fine-print { opacity: 0.85; font-size: 0.85rem; }
 
 /* Larger screens */
@@ -326,6 +362,11 @@ a:focus-visible, button:focus-visible {
   .section { padding: 72px 0; }
   .cta-row { flex-direction: row; }
   .card-grid { grid-template-columns: 1fr 1fr; }
+  .link-cards { grid-template-columns: repeat(3, 1fr); }
+  .org-details { grid-template-columns: max-content 1fr; }
+  .org-details dt, .org-details dt:first-child { margin-top: 0; }
+  .footer-inner { grid-template-columns: 1fr 1fr; }
+  .page-hero { padding: 48px 0 40px; }
   .board-grid { grid-template-columns: repeat(4, 1fr); }
 
   .nav-toggle { display: none; }
@@ -336,5 +377,5 @@ a:focus-visible, button:focus-visible {
     background: none;
   }
   .site-nav ul { display: flex; gap: 4px; padding: 0; }
-  .site-nav a { padding: 10px 12px; min-height: 0; }
+  .site-nav a { padding: 10px; min-height: 0; }
 }

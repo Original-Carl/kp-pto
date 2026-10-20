@@ -35,6 +35,10 @@ jobs:
         with:
           node-version-file: .nvmrc
       - run: node --test
+      # Not a gate: lists content still to add (Zeffy URLs, volunteer roles, …)
+      # in the run summary so it's visible on every PR.
+      - name: Content still to add
+        run: node scripts/check-content.mjs
 
   inherit:
     name: inherit
@@ -99,9 +103,9 @@ jobs:
       - name: Install tools/ci
         working-directory: tools/ci
         run: npm ci --no-fund --no-audit
-      - name: HTML validation
+      - name: HTML validation (every page)
         working-directory: tools/ci
-        run: npx html-validate ../../index.html
+        run: npx html-validate ../../*.html
       - name: Install Chromium
         working-directory: tools/ci
         run: npx playwright install --with-deps chromium

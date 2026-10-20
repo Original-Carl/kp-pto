@@ -175,3 +175,8 @@ test("action pins: *_IMAGE env vars must be pinned by digest", () => {
   for (const line of bad) assert.equal(checkActionPins({ "w.yml": line }).length, 1, `not caught: ${line}`);
   assert.deepEqual(checkActionPins({ "w.yml": `          SEMGREP_IMAGE: semgrep/semgrep@sha256:${DIGEST} # 1.178.0` }), []);
 });
+
+test("multi-page: errors name the page they came from", () => {
+  assert.match(checkCsp("<html></html>", "about.html")[0], /^about\.html:/);
+  assert.match(checkHtmlLoads(`<script src="https://evil.example/x.js"></script>`, "contact.html")[0], /^contact\.html:/);
+});

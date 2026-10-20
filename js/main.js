@@ -98,30 +98,6 @@ function initNav() {
     setOpen(false);
     if (hadFocus) toggle.focus();
   });
-
-  // Highlight the nav link for the section in view. #top has no link, so it clears the highlight.
-  if (!("IntersectionObserver" in window)) return;
-  const links = new Map(
-    [...nav.querySelectorAll('a[href^="#"]')].map((a) => [a.getAttribute("href").slice(1), a])
-  );
-  const observer = new IntersectionObserver((entries) => {
-    for (const entry of entries) {
-      if (!entry.isIntersecting) continue;
-      for (const [id, link] of links) link.classList.toggle("is-active", id === entry.target.id);
-    }
-  }, { rootMargin: "-45% 0px -50% 0px" });
-  for (const id of ["top", ...links.keys()]) {
-    const section = document.getElementById(id);
-    if (section) observer.observe(section);
-  }
-
-  // The last section can be too short to reach the middle band on tall screens.
-  const lastId = [...links.keys()].pop();
-  window.addEventListener("scroll", () => {
-    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
-      for (const [id, link] of links) link.classList.toggle("is-active", id === lastId);
-    }
-  }, { passive: true });
 }
 
 if (typeof document !== "undefined") {

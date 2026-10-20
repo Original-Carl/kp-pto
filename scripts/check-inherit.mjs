@@ -2,7 +2,8 @@
 // or allowlisted. Node built-ins only, so this check has no supply chain itself.
 //   1. GitHub Actions pinned to full commit SHAs; container images by digest
 //      (every YAML file under .github/, including local composite actions).
-//   2. The page loads nothing from third parties: the CSP comes before anything
+//   2. No page (every *.html at the repo root) loads anything from third
+//      parties: the CSP comes before anything
 //      that loads, allows only the sources in CSP_ALLOWED, and every URL that
 //      loads a resource (attributes, srcset, inline and external CSS) resolves
 //      to the site's own origin. Navigation links (<a href>) aren't loads.
@@ -121,48 +122,48 @@ export function parseCsp(html) {
   return { csp, index: meta.index };
 }
 
-export function checkCsp(html) {
+export function checkCsp(html, file = "index.html") {
   const parsed = parseCsp(html);
-  if (!parsed) return ["index.html: no Content-Security-Policy <meta> tag"];
+  if (!parsed) return [`${file}: no Content-Security-Policy <meta> tag`];
   const { csp, index } = parsed;
   const errors = [];
-  if (!csp["default-src"]) errors.push("CSP: missing default-src");
+  if (!csp["default-src"]) errors.push(`${file} CSP: missing default-src`);
   for (const [directive, sources] of Object.entries(csp)) {
     const extra = CSP_ALLOWED[directive] || [];
     for (const source of sources) {
       if (source === "'self'" || source === "'none'" || extra.includes(source)) continue;
-      errors.push(`CSP ${directive}: "${source}" is not on the allowlist (scripts/check-inherit.mjs CSP_ALLOWED)`);
+      errors.push(`${file} CSP ${directive}: "${source}" is not on the allowlist (scripts/check-inherit.mjs CSP_ALLOWED)`);
     }
   }
   // A <meta> CSP only governs what comes after it.
   const early = tags(html).find((t) => t.index < index && ["script", "link", "style", "base", "img", "iframe"].includes(t.name));
-  if (early) errors.push(`index.html: <${early.name}> appears before the CSP <meta>, so the CSP doesn't cover it`);
+  if (early) errors.push(`${file}: <${early.name}> appears before the CSP <meta>, so the CSP doesn't cover it`);
   return errors;
 }
 
-export function checkHtmlLoads(html) {
+export function checkHtmlLoads(html, file = "index.html") {
   const errors = [];
   const stripped = html.replace(/<!--[\s\S]*?-->/g, "");
   for (const { name, attrs } of tags(stripped)) {
-    if (attrs.style) errors.push(...checkCssLoads(`index.html <${name} style>`, decodeEntities(attrs.style)));
+    if (attrs.style) errors.push(...checkCssLoads(`${file} <${name} style>`, decodeEntities(attrs.style)));
     if (!LOADING_TAGS.has(name)) continue;
     if (name === "link") {
       const rels = (attrs.rel || "").toLowerCase().split(/\s+/).filter(Boolean);
       if (rels.length && rels.every((r) => NON_LOADING_REL.has(r))) continue;
     }
     for (const a of URL_ATTRS) {
-      if (a in attrs && isThirdParty(attrs[a])) errors.push(`index.html: <${name} ${a}="${attrs[a]}"> loads from a third party`);
+      if (a in attrs && isThirdParty(attrs[a])) errors.push(`${file}: <${name} ${a}="${attrs[a]}"> loads from a third party`);
     }
     for (const a of SRCSET_ATTRS) {
       if (!(a in attrs)) continue;
       for (const candidate of decodeEntities(attrs[a]).split(",")) {
         const url = candidate.trim().split(/\s+/)[0];
-        if (url && isThirdParty(url)) errors.push(`index.html: <${name} ${a}> candidate "${url}" loads from a third party`);
+        if (url && isThirdParty(url)) errors.push(`${file}: <${name} ${a}> candidate "${url}" loads from a third party`);
       }
     }
   }
   for (const m of stripped.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi)) {
-    errors.push(...checkCssLoads("index.html <style>", m[1]));
+    errors.push(...checkCssLoads(`${file} <style>`, m[1]));
   }
   return errors;
 }
@@ -214,15 +215,15 @@ function main(root) {
   const yamls = Object.fromEntries(walk(join(root, ".github"))
     .filter((f) => /\.ya?ml$/.test(f))
     .map((f) => [relative(root, f), readFileSync(f, "utf8")]));
-  const html = read("index.html");
+  const pages = readdirSync(root).filter((f) => f.endsWith(".html"));
   const cssFiles = readdirSync(join(root, "css")).filter((f) => f.endsWith(".css"));
   const fontFiles = readdirSync(join(root, "fonts"));
   const hashOf = (f) => createHash("sha256").update(readFileSync(join(root, "fonts", f))).digest("hex");
 
   const errors = [
     ...checkActionPins(yamls),
-    ...checkCsp(html),
-    ...checkHtmlLoads(html),
+    ...(pages.length ? [] : ["no *.html pages found at the repo root"]),
+    ...pages.flatMap((f) => [...checkCsp(read(f), f), ...checkHtmlLoads(read(f), f)]),
     ...cssFiles.flatMap((f) => checkCssLoads(`css/${f}`, read(`css/${f}`))),
     ...checkFonts(JSON.parse(read("fonts/sources.json")), fontFiles, hashOf),
   ];
@@ -230,7 +231,7 @@ function main(root) {
     process.stderr.write(`Inherit check failed (${errors.length}):\n${errors.map((e) => `  - ${e}`).join("\n")}\n`);
     process.exit(1);
   }
-  process.stdout.write(`Inherit check passed: ${Object.keys(yamls).length} YAML files pinned, CSP and page loads allowlisted, ${fontFiles.filter((f) => FONT_FILE.test(f)).length} fonts verified.\n`);
+  process.stdout.write(`Inherit check passed: ${Object.keys(yamls).length} YAML files pinned, CSP and page loads allowlisted on ${pages.length} pages, ${fontFiles.filter((f) => FONT_FILE.test(f)).length} fonts verified.\n`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
