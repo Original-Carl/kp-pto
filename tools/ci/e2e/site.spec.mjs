@@ -253,3 +253,13 @@ test("Contact lists the PTO board, president first", async ({ page }) => {
     await expect(member.locator(".name")).not.toHaveText("");
   }
 });
+
+test("robots.txt and sitemap.xml are served", async ({ request }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "one check is enough");
+  const robots = await request.get("robots.txt");
+  expect(robots.status()).toBe(200);
+  expect(await robots.text()).toContain("Sitemap: https://kp-pto.org/sitemap.xml");
+  const sitemap = await request.get("sitemap.xml");
+  expect(sitemap.status()).toBe(200);
+  expect(await sitemap.text()).toContain("<loc>https://kp-pto.org/about.html</loc>");
+});
