@@ -46,8 +46,7 @@ Run `node scripts/check-content.mjs`; CI also prints this list on every run. Sec
 
 - **Zeffy link** for the vending form on `support.html`
 - **Volunteer roles and a sign-up link** on `volunteer.html` (there's a commented template)
-- **Board members** on `contact.html` (there's a commented template; list only people who've agreed)
-- Check that the public email `info@kp-pto.org` exists
+- Board changes go in `contact.html` (`.board-grid`); list only people who've agreed
 - The official logo, if there is one: replace the inline "KP" SVG in every page's header and `assets/favicon.svg`
 - **At launch:** remove the pre-launch `<meta name="robots" content="noindex, nofollow">` tag from every page
 

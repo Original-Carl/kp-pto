@@ -251,3 +251,14 @@ test("events: an https link renders; other schemes don't", async ({ page }) => {
   await expect(links).toHaveText("Tickets");
   await expect(links).toHaveAttribute("href", "https://www.zeffy.com/en-US/ticketing/test");
 });
+
+test("Contact lists the PTO board, president first", async ({ page }) => {
+  await page.goto("contact.html");
+  const members = page.locator(".board-member");
+  expect(await members.count()).toBeGreaterThan(0);
+  await expect(members.first().locator(".role")).toHaveText("President");
+  for (const member of await members.all()) {
+    await expect(member.locator(".role")).not.toHaveText("");
+    await expect(member.locator(".name")).not.toHaveText("");
+  }
+});
