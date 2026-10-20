@@ -226,11 +226,11 @@ test("Support lists what contributions fund and ways to give; nothing is embedde
   await expect(page.locator("h1")).toHaveText("Events");
 });
 
-test("events: an https link renders; other schemes don't", async ({ page }) => {
+test("events: details render as text; an https link renders, other schemes don't", async ({ page }) => {
   await page.route("**/js/events.js", (route) => route.fulfill({
     contentType: "text/javascript",
     body: `window.PTO_EVENTS = ${JSON.stringify([
-      { date: isoDate(1), title: "With link", link: "https://www.zeffy.com/en-US/ticketing/test", linkText: "Tickets" },
+      { date: isoDate(1), title: "With link", details: "Entry $5 <b>not bold</b>", link: "https://www.zeffy.com/en-US/ticketing/test", linkText: "Tickets" },
       { date: isoDate(2), title: "Bad link", link: "javascript:alert(1)", linkText: "Nope" },
     ])};`,
   }));
@@ -239,6 +239,8 @@ test("events: an https link renders; other schemes don't", async ({ page }) => {
   await expect(links).toHaveCount(1);
   await expect(links).toHaveText("Tickets");
   await expect(links).toHaveAttribute("href", "https://www.zeffy.com/en-US/ticketing/test");
+  // Details render as plain text, never as HTML.
+  await expect(page.locator("#event-list .event-details")).toHaveText("Entry $5 <b>not bold</b>");
 });
 
 test("Contact lists the PTO board, president first", async ({ page }) => {

@@ -299,6 +299,7 @@ address { font-style: normal; }
 .event-month-heading h3 { margin: 16px 0 0; font-size: 1.3rem; }
 .event-month-heading:first-child h3 { margin-top: 0; }
 .event-meta { margin: 0; color: var(--color-muted); font-size: 0.95rem; }
+.event-details { margin: 6px 0 0; font-size: 0.95rem; }
 .event-link {
   display: inline-flex;
   align-items: center;

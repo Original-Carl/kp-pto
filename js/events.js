@@ -1,6 +1,7 @@
 // Edit this list to post events. Past events hide automatically; order doesn't matter.
 // date: "YYYY-MM-DD" (required). end: last day of a multi-day event (optional).
-// time, location, link (an https URL, e.g. a Zeffy ticket page), and linkText are optional.
+// time, location, details (a sentence or two), link (an https URL, e.g. a Zeffy
+// ticket page), and linkText are optional.
 //
 // Source: "KP Calendar of Events 2026-2027" (school calendar PDF), family-facing
 // items only. Left out: staff-only deadlines (grades/progress reports due,
@@ -33,10 +34,19 @@ window.PTO_EVENTS = [
   { date: "2026-10-08", title: "PTO Board Meeting", location: "Zoom & Library" },
   { date: "2026-10-12", title: "Indigenous Peoples’ Day: No School, Offices Closed" },
   { date: "2026-10-27", title: "Picture Retake Day" },
-  { date: "2026-10-27", title: "Grade 6 Halloween Mixer", time: "3–4 PM" },
+  {
+    // From the Grade 6 Halloween Dance flyer. The Zeffy URL is the one in the flyer's QR code
+    // (its slug is a leftover from a Zeffy template; don't rename it or the QR code may break).
+    date: "2026-10-27", title: "Grade 6 Halloween Dance", time: "3–4 PM", location: "Grade 6 Gym",
+    details: "Entry ticket $5, includes 2 snacks, 1 beverage, and a bag of candy. Live DJ, Passing the Parcel, Wrap the Mummy, and other games. Wear your Halloween costume: best costumes win prizes! Tickets on sale at lunch Oct 21–23, or online.",
+    link: "https://www.zeffy.com/en-US/ticketing/annual-gala-test-59",
+    linkText: "Tickets on Zeffy",
+  },
   { date: "2026-10-28", title: "Choir MidFest" },
   {
-    date: "2026-10-30", title: "7th & 8th Grade Halloween Mixer", time: "6–8 PM", location: "Grade 7 & 8 Gym",
+    // From the Grade 7 & 8 Halloween Dance flyer; its QR code points to this Zeffy page.
+    date: "2026-10-30", title: "Grade 7 & 8 Halloween Dance", time: "6–8 PM", location: "Grade 7 & 8 Gym",
+    details: "Entry ticket $7, includes pizza, drinks, candy, a live DJ, and fun activities. Costumes encouraged: best costumes win prizes! Tickets on sale at lunch Oct 21–23 and Oct 28–29, or online.",
     link: "https://www.zeffy.com/en-US/ticketing/2026-grade-7-and-8-halloween-mixer",
     linkText: "Tickets on Zeffy",
   },

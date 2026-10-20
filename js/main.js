@@ -94,6 +94,13 @@ function renderEvents(listEl, emptyEl, events, today) {
       body.append(metaEl);
     }
 
+    if (event.details) {
+      const details = document.createElement("p");
+      details.className = "event-details";
+      details.textContent = event.details;
+      body.append(details);
+    }
+
     if (event.link && isSafeLink(event.link)) {
       const link = document.createElement("a");
       link.className = "event-link";
