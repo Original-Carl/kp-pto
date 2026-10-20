@@ -107,3 +107,19 @@ test("no visible placeholders on any page", () => {
     assert.ok(!/\[\[TODO|TODO:/.test(visible), `${page} has a visible TODO placeholder`);
   }
 });
+
+test("launched: no page tells search engines to stay away", () => {
+  for (const page of PAGES) assert.ok(!/<meta name="robots" content="[^"]*noindex/.test(read(page)), `${page} still has noindex`);
+});
+
+test("sitemap.xml lists every page except 404, and nothing else", () => {
+  const listed = [...read("sitemap.xml").matchAll(/<loc>https:\/\/kp-pto\.org(\/[^<]*)<\/loc>/g)].map(([, p]) => fileFor(p)).sort();
+  assert.deepEqual(listed, PAGES.filter((p) => p !== "404.html"));
+});
+
+test("robots.txt allows crawling and points at the sitemap", () => {
+  const robots = read("robots.txt");
+  assert.match(robots, /^User-agent: \*$/m);
+  assert.ok(!/^Disallow: \/\s*$/m.test(robots), "robots.txt blocks the whole site");
+  assert.match(robots, /^Sitemap: https:\/\/kp-pto\.org\/sitemap\.xml$/m);
+});

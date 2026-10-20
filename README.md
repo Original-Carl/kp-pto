@@ -18,6 +18,7 @@ It's built mobile-first for phones on slow connections:
 | `volunteer.html` | Volunteer roles and sign-up |
 | `contact.html` | Email, mailing address, and board |
 | `404.html` | Shown by GitHub Pages for unknown URLs |
+| `sitemap.xml`, `robots.txt` | For search engines. When you add a page, add it to `sitemap.xml` too; `tests/pages.test.mjs` checks this. |
 | `css/styles.css` | Styles. Colors are CSS variables at the top of the file. |
 | `js/events.js` | **The events list.** Edit this file to post events. |
 | `js/main.js` | Menu toggle and events rendering |
@@ -47,7 +48,6 @@ Run `node scripts/check-content.mjs`; CI also prints this list on every run. Sec
 - **Volunteer roles and a sign-up link** on `volunteer.html` (there's a commented template)
 - Board changes go in `contact.html` (`.board-grid`); list only people who've agreed
 - The official logo, if there is one: replace the inline "KP" SVG in every page's header and `assets/favicon.svg`
-- **At launch:** remove the pre-launch `<meta name="robots" content="noindex, nofollow">` tag from every page
 
 ### Zeffy links
 The PTO creates a Zeffy link for each campaign or event that collects money. The site links out to Zeffy and doesn't embed anything. Each link goes on its event in `js/events.js`:
