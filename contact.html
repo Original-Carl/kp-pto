@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; frame-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>Contact | King Philip Middle School PTO</title>
+  <!-- PRE-LAUNCH: keeps search engines from listing the site. Remove at launch. -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Contact the King Philip Middle School PTO.">
+  <link rel="canonical" href="https://kp-pto.org/contact.html">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kp-pto.org/contact.html">
+  <meta property="og:title" content="Contact | King Philip Middle School PTO">
+  <meta property="og:description" content="Contact the King Philip Middle School PTO.">
+  <meta name="theme-color" content="#2e318e">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <!-- Self-hosted school-site fonts (see css/styles.css @font-face). Preload the two used above the fold. -->
+  <link rel="preload" href="/fonts/lato-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/fjalla-one-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/main.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- SHARED HEADER: keep identical on every page (tests/pages.test.mjs checks). -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="King Philip Middle School PTO home">
+        <!-- Inline placeholder mark (saves a request). Swap for the official logo when there is one. -->
+        <svg class="brand-mark" viewBox="0 0 40 40" width="36" height="36" aria-hidden="true">
+          <rect width="40" height="40" rx="8" fill="currentColor"/>
+          <text x="20" y="26" text-anchor="middle" font-size="16" font-weight="700" font-family="system-ui, sans-serif" fill="#fff">KP</text>
+        </svg>
+        <span>KP PTO</span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span class="nav-toggle-bar" aria-hidden="true"></span>
+        <span class="visually-hidden">Menu</span>
+      </button>
+      <nav id="site-nav" class="site-nav" aria-label="Primary">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/about.html">About</a></li>
+          <li><a href="/events.html">Events</a></li>
+          <li><a href="/support.html">Support</a></li>
+          <li><a href="/volunteer.html">Volunteer</a></li>
+          <li><a href="/contact.html" aria-current="page">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container">
+        <h1>Contact</h1>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="contact-heading">
+      <div class="container narrow">
+        <h2 id="contact-heading">Get in Touch</h2>
+        <p class="contact-line">Email the PTO board at
+          <a href="mailto:kppto678@gmail.com">kppto678@gmail.com</a>.</p>
+        <h3>Mailing Address</h3>
+        <address class="contact-address">King Philip Middle School PTO Inc.<br>C/O King Philip Middle School<br>100 King Philip Drive<br>West Hartford, CT 06117</address>
+      </div>
+    </section>
+
+    <section class="section section-alt" aria-labelledby="board-heading">
+      <div class="container">
+        <h2 id="board-heading">PTO Board</h2>
+        <ul class="board-grid">
+          <li class="board-member"><span class="role">President</span><span class="name">Mike Leahy</span></li>
+          <li class="board-member"><span class="role">Vice President</span><span class="name">Jeff Bellitti</span></li>
+          <li class="board-member"><span class="role">Secretary</span><span class="name">Carl Hess</span></li>
+          <li class="board-member"><span class="role">Co-Treasurer</span><span class="name">Lorien Renslow Hess</span></li>
+          <li class="board-member"><span class="role">Co-Treasurer</span><span class="name">Marc Giammatteo</span></li>
+          <li class="board-member"><span class="role">Fundraising Co-Chair</span><span class="name">Genna Griffith</span></li>
+          <li class="board-member"><span class="role">Fundraising Co-Chair</span><span class="name">Katie Bacon</span></li>
+          <li class="board-member"><span class="role">Events Chair</span><span class="name">Priya Shanbhag</span></li>
+          <li class="board-member"><span class="role">Volunteer Chair</span><span class="name">Gunjan Sharma</span></li>
+          <li class="board-member"><span class="role">SEPTO Representative</span><span class="name">Jenifer Bennet Black</span></li>
+          <li class="board-member"><span class="role">Teacher Representative</span><span class="name">Julie Morisano</span></li>
+          <li class="board-member"><span class="role">Teacher Representative</span><span class="name">Karen Bridges</span></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- SHARED FOOTER: keep identical on every page (tests/pages.test.mjs checks). -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-org">
+        <p class="footer-name">King Philip Middle School PTO Inc.</p>
+        <address>C/O King Philip Middle School<br>100 King Philip Drive<br>West Hartford, CT 06117</address>
+        <p>EIN (Charity ID): 41-3002032</p>
+      </div>
+      <div class="footer-links">
+        <p><a href="mailto:kppto678@gmail.com">kppto678@gmail.com</a></p>
+        <p><a href="https://kingphilip.whps.org/">King Philip Middle School website</a></p>
+        <p class="fine-print">&copy; <span id="year">2026</span> King Philip Middle School PTO Inc.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

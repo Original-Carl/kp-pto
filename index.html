@@ -4,32 +4,32 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; frame-src https://www.zeffy.com; base-uri 'self'; form-action 'self'">
+        content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; frame-src 'none'; base-uri 'self'; form-action 'self'">
   <title>King Philip Middle School PTO</title>
-  <!-- PRE-LAUNCH: keeps search engines from listing the placeholder site. Remove at launch. -->
+  <!-- PRE-LAUNCH: keeps search engines from listing the site. Remove at launch. -->
   <meta name="robots" content="noindex, nofollow">
-  <meta name="description" content="King Philip Middle School PTO: events, volunteering, and ways to support our students and teachers.">
+  <meta name="description" content="King Philip Middle School PTO: our mission, events, volunteering, and ways to support students and teachers.">
   <link rel="canonical" href="https://kp-pto.org/">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://kp-pto.org/">
   <meta property="og:title" content="King Philip Middle School PTO">
-  <meta property="og:description" content="Events, volunteering, and ways to support King Philip Middle School.">
+  <meta property="og:description" content="King Philip Middle School PTO: our mission, events, volunteering, and ways to support students and teachers.">
   <meta name="theme-color" content="#2e318e">
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <!-- Self-hosted school-site fonts (see css/styles.css @font-face). Preload the two used above the fold. -->
-  <link rel="preload" href="fonts/lato-400.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="fonts/fjalla-one-400.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css">
-  <script src="js/events.js" defer></script>
-  <script src="js/main.js" defer></script>
+  <link rel="preload" href="/fonts/lato-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/fjalla-one-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/main.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
 
+  <!-- SHARED HEADER: keep identical on every page (tests/pages.test.mjs checks). -->
   <header class="site-header">
     <div class="container header-inner">
-      <a class="brand" href="#top" aria-label="King Philip Middle School PTO, back to top">
-        <!-- Inline placeholder mark (saves a request). TODO: swap for the official logo. -->
+      <a class="brand" href="/" aria-label="King Philip Middle School PTO home">
+        <!-- Inline placeholder mark (saves a request). Swap for the official logo when there is one. -->
         <svg class="brand-mark" viewBox="0 0 40 40" width="36" height="36" aria-hidden="true">
           <rect width="40" height="40" rx="8" fill="currentColor"/>
           <text x="20" y="26" text-anchor="middle" font-size="16" font-weight="700" font-family="system-ui, sans-serif" fill="#fff">KP</text>
@@ -42,110 +42,57 @@
       </button>
       <nav id="site-nav" class="site-nav" aria-label="Primary">
         <ul>
-          <li><a href="#about">About</a></li>
-          <li><a href="#events">Events</a></li>
-          <li><a href="#support">Support</a></li>
-          <li><a href="#volunteer">Volunteer</a></li>
-          <li><a href="#contact">Board &amp; Contact</a></li>
+          <li><a href="/" aria-current="page">Home</a></li>
+          <li><a href="/about.html">About</a></li>
+          <li><a href="/events.html">Events</a></li>
+          <li><a href="/support.html">Support</a></li>
+          <li><a href="/volunteer.html">Volunteer</a></li>
+          <li><a href="/contact.html">Contact</a></li>
         </ul>
       </nav>
     </div>
   </header>
 
   <main id="main">
-    <section id="top" class="hero">
+    <section class="hero">
       <div class="container">
         <p class="eyebrow">King Philip Middle School</p>
         <h1>Parent Teacher Organization</h1>
-        <p class="lead">[[TODO: one-sentence tagline]]</p>
+        <p class="lead">Our mission is to fund, organize, support, coordinate, and facilitate programs and opportunities that support the students and teachers of King Philip Middle School.</p>
         <div class="cta-row">
-          <a class="btn btn-primary" href="#support">Donate</a>
-          <a class="btn btn-secondary" href="#volunteer">Get Involved</a>
+          <a class="btn btn-primary" href="/support.html">Support the PTO</a>
+          <a class="btn btn-secondary" href="/volunteer.html">Volunteer</a>
         </div>
       </div>
     </section>
 
-    <section id="about" class="section" aria-labelledby="about-heading">
-      <div class="container narrow">
-        <h2 id="about-heading">About Us</h2>
-        <p>[[TODO: mission statement]]</p>
-        <p>[[TODO: what the PTO funds and does: programs, events, teacher support]]</p>
-      </div>
-    </section>
-
-    <section id="events" class="section section-alt" aria-labelledby="events-heading">
+    <section class="section" aria-labelledby="explore-heading">
       <div class="container">
-        <h2 id="events-heading">Upcoming Events</h2>
-        <ul class="event-list" id="event-list"></ul>
-        <p class="empty-note" id="events-empty" hidden>No upcoming events posted yet. Check back soon!</p>
-        <noscript><p class="empty-note">Turn on JavaScript to see the events list.</p></noscript>
-      </div>
-    </section>
-
-    <section id="support" class="section" aria-labelledby="support-heading">
-      <div class="container">
-        <h2 id="support-heading">Support the PTO</h2>
-        <p class="section-intro">Payments are processed securely by Zeffy, so 100% of your payment goes to the PTO.</p>
-        <div class="card-grid">
-          <article class="card">
-            <h3>Contributions</h3>
-            <p>[[TODO: what contributions support]]</p>
-            <!-- Paste the Zeffy embed URL (https://www.zeffy.com/embed/...) into data-zeffy-src. -->
-            <div class="zeffy-embed"
-                 data-zeffy-src="[[TODO: Zeffy contributions embed URL]]"
-                 data-zeffy-title="Contribution form powered by Zeffy">
-              <p class="empty-note">Contribution form coming soon.</p>
-            </div>
-          </article>
-          <article class="card">
-            <h3>Vending</h3>
-            <p>[[TODO: what's sold and how pickup works]]</p>
-            <!-- Paste the Zeffy embed URL (https://www.zeffy.com/embed/...) into data-zeffy-src. -->
-            <div class="zeffy-embed"
-                 data-zeffy-src="[[TODO: Zeffy vending embed URL]]"
-                 data-zeffy-title="Vending form powered by Zeffy">
-              <p class="empty-note">Vending form coming soon.</p>
-            </div>
-          </article>
-        </div>
-        <noscript><p class="empty-note">Turn on JavaScript to load the payment forms.</p></noscript>
-      </div>
-    </section>
-
-    <section id="volunteer" class="section section-alt" aria-labelledby="volunteer-heading">
-      <div class="container narrow">
-        <h2 id="volunteer-heading">Get Involved</h2>
-        <p>[[TODO: why volunteer, and the time commitment]]</p>
-        <ul class="check-list">
-          <li>[[TODO: volunteer role 1]]</li>
-          <li>[[TODO: volunteer role 2]]</li>
-          <li>[[TODO: volunteer role 3]]</li>
+        <h2 id="explore-heading">Explore</h2>
+        <ul class="link-cards">
+          <li><a class="link-card" href="/about.html"><span class="link-card-title">About</span><span class="link-card-text">Our mission and organization details.</span></a></li>
+          <li><a class="link-card" href="/events.html"><span class="link-card-title">Events</span><span class="link-card-text">Upcoming PTO meetings and events.</span></a></li>
+          <li><a class="link-card" href="/support.html"><span class="link-card-title">Support</span><span class="link-card-text">What contributions fund and ways to give.</span></a></li>
+          <li><a class="link-card" href="/volunteer.html"><span class="link-card-title">Volunteer</span><span class="link-card-text">How to help out.</span></a></li>
+          <li><a class="link-card" href="/contact.html"><span class="link-card-title">Contact</span><span class="link-card-text">How to reach the PTO.</span></a></li>
         </ul>
-        <a class="btn btn-primary" href="#">[[TODO: sign-up link]]</a>
-      </div>
-    </section>
-
-    <section id="contact" class="section" aria-labelledby="contact-heading">
-      <div class="container">
-        <h2 id="contact-heading">Board &amp; Contact</h2>
-        <ul class="board-grid">
-          <li class="board-member"><span class="role">President</span><span class="name">[[TODO: name]]</span></li>
-          <li class="board-member"><span class="role">Vice President</span><span class="name">[[TODO: name]]</span></li>
-          <li class="board-member"><span class="role">Treasurer</span><span class="name">[[TODO: name]]</span></li>
-          <li class="board-member"><span class="role">Secretary</span><span class="name">[[TODO: name]]</span></li>
-        </ul>
-        <p class="contact-line">Questions? Email us at
-          <a href="mailto:info@kp-pto.org">info@kp-pto.org</a> <!-- TODO: confirm public contact address -->
-        </p>
       </div>
     </section>
   </main>
 
+  <!-- SHARED FOOTER: keep identical on every page (tests/pages.test.mjs checks). -->
   <footer class="site-footer">
     <div class="container footer-inner">
-      <p>&copy; <span id="year"></span> King Philip Middle School PTO</p>
-      <p><a href="#">[[TODO: school website link]]</a></p>
-      <p class="fine-print">[[TODO: non-profit / tax-ID note]]</p>
+      <div class="footer-org">
+        <p class="footer-name">King Philip Middle School PTO Inc.</p>
+        <address>C/O King Philip Middle School<br>100 King Philip Drive<br>West Hartford, CT 06117</address>
+        <p>EIN (Charity ID): 41-3002032</p>
+      </div>
+      <div class="footer-links">
+        <p><a href="mailto:kppto678@gmail.com">kppto678@gmail.com</a></p>
+        <p><a href="https://kingphilip.whps.org/">King Philip Middle School website</a></p>
+        <p class="fine-print">&copy; <span id="year">2026</span> King Philip Middle School PTO Inc.</p>
+      </div>
     </div>
   </footer>
 </body>

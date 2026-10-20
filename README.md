@@ -1,50 +1,62 @@
 # King Philip Middle School PTO: kp-pto.org
 
-A single-page static site in plain HTML, CSS, and JavaScript. There is no build step and there are no dependencies.
+A static site in plain HTML, CSS, and JavaScript, with six pages plus a 404 page. There is no build step and there are no dependencies.
 
 It's built mobile-first for phones on slow connections:
-- No frameworks and no third-party requests, except the Zeffy forms.
+- No frameworks and no third-party requests. Payments hand off to Zeffy's own pages; nothing is embedded.
 - Two self-hosted web fonts that match the school's site: Fjalla One for headings and Lato 400/700 for body text. They are latin-subset woff2 files in `fonts/`, about 66 KB in total, and use `font-display: swap`. Both are licensed under the SIL Open Font License, and the license texts are in `fonts/`.
 - The logo is inline SVG.
-- Zeffy forms load lazily, so they don't load until a visitor scrolls near them.
 
 ## Files
 
 | Path | What it is |
 |------|------------|
-| `index.html` | The page and all its copy |
+| `index.html` | Home: mission banner and links to each page |
+| `about.html` | Mission, programs, and organization details (legal name, EIN, address), plus JSON-LD |
+| `events.html` | Upcoming events (from `js/events.js`) |
+| `support.html` | What contributions fund and ways to give (online via event links, check, cash) |
+| `volunteer.html` | Volunteer roles and sign-up |
+| `contact.html` | Email, mailing address, and board |
+| `404.html` | Shown by GitHub Pages for unknown URLs |
 | `css/styles.css` | Styles. Colors are CSS variables at the top of the file. |
 | `js/events.js` | **The events list.** Edit this file to post events. |
-| `js/main.js` | Menu toggle, events rendering, and Zeffy embeds |
+| `js/main.js` | Menu toggle and events rendering |
 | `assets/favicon.svg` | Browser-tab icon |
 | `fonts/` | Self-hosted woff2 fonts, their OFL licenses, and `sources.json` (origin and checksum for each font) |
-| `tests/` | Unit tests: events logic and the Inherit checks |
-| `scripts/` | Pipeline scripts: `check-inherit.mjs`, `check-licenses.mjs`, and `stage-site.mjs` (copies the shipped files into `_site/`) |
+| `tests/` | Unit tests: events logic, the Inherit checks, and page consistency (`pages.test.mjs`) |
+| `scripts/` | Pipeline scripts: `check-inherit.mjs`, `check-licenses.mjs`, `check-content.mjs` (lists content still to add), and `stage-site.mjs` (copies the shipped files into `_site/`) |
 | `tools/ci/` | CI-only npm tooling (never shipped): Playwright, html-validate, and the browser tests in `tools/ci/e2e/` |
 
 ## Editing content
 
-### Placeholders to replace
-Search `index.html` for `[[TODO` and `TODO:`. These are the placeholders:
+### Shared header and footer
+Every page carries its own copy of the header (logo and nav) and the footer (legal name, EIN, address, and email). If you change one, change them all the same way. `tests/pages.test.mjs` fails if they drift apart, if a tab stops pointing at its own page, or if a `[[TODO` placeholder is visible on any page.
 
-- The hero tagline
-- The About section: the mission statement and what the PTO funds
-- **The Zeffy contributions embed URL** (`data-zeffy-src` on the first `.zeffy-embed`)
-- **The Zeffy vending embed URL** (`data-zeffy-src` on the second `.zeffy-embed`)
-- The text describing contributions and vending
-- The volunteer intro, the role list, and the sign-up link
-- Board member names (President, Vice President, Treasurer, Secretary)
-- The public contact email (currently `info@kp-pto.org`; check that the mailbox exists)
-- The school website link and the non-profit / tax-ID note in the footer
-- The logo: an inline "KP" SVG in the header plus `assets/favicon.svg`
-- **At launch:** remove the pre-launch `<meta name="robots" content="noindex, nofollow">` tag from `index.html`
+### Organization details
+These must match what's registered with Google for Nonprofits exactly. They appear in the footer of every page and on `about.html`, including its JSON-LD block:
 
-### Zeffy forms
-1. In Zeffy, open the form and choose **Share → Embed**.
-2. Copy the `src` URL from the embed code. It starts with `https://www.zeffy.com/`.
-3. Paste that URL into the matching `data-zeffy-src="..."` in `index.html`.
+- **Legal name:** King Philip Middle School PTO Inc.
+- **EIN (Charity ID):** 41-3002032
+- **Address:** C/O King Philip Middle School, 100 King Philip Drive, West Hartford, CT 06117
 
-The script only builds the iframe from `https://www.zeffy.com/` URLs, and the CSP's `frame-src` in `index.html` allows only that host. If Zeffy ever gives you a URL on a different host, update both. Until a real URL is in place, the card shows "form coming soon". If a form gets cut off, raise the height in `.zeffy-embed.is-loaded` in `css/styles.css`.
+`tests/pages.test.mjs` and the browser tests check for these exact values.
+
+### Content still to add
+Run `node scripts/check-content.mjs`; CI also prints this list on every run. Sections without content are left out of the page rather than shown as placeholders:
+
+- **Volunteer roles and a sign-up link** on `volunteer.html` (there's a commented template)
+- Board changes go in `contact.html` (`.board-grid`); list only people who've agreed
+- The official logo, if there is one: replace the inline "KP" SVG in every page's header and `assets/favicon.svg`
+- **At launch:** remove the pre-launch `<meta name="robots" content="noindex, nofollow">` tag from every page
+
+### Zeffy links
+The PTO creates a Zeffy link for each campaign or event that collects money. The site links out to Zeffy and doesn't embed anything. Each link goes on its event in `js/events.js`:
+
+```js
+{ date: "2026-10-30", title: "7th & 8th Grade Halloween Mixer", link: "https://www.zeffy.com/en-US/ticketing/…", linkText: "Tickets on Zeffy" },
+```
+
+To get the link, open the form in Zeffy and choose **Share → Copy link**. Only `https://` links are shown. The Support page sends people to the Events page for online giving.
 
 ### Events
 Add entries to `js/events.js`:
@@ -58,7 +70,7 @@ Events are sorted by date, and past events hide automatically.
 ## Running locally
 
 ```bash
-python3 -m http.server 8080 --directory .
+node scripts/stage-site.mjs && node scripts/serve.mjs 8080
 ```
 
 Then open http://localhost:8080.
@@ -80,10 +92,10 @@ cd tools/ci && npm ci && npx playwright install chromium
 Then, from `tools/ci`, validate the HTML:
 
 ```bash
-npx html-validate ../../index.html
+npx html-validate ../../*.html
 ```
 
-And run the browser tests. They stage `_site/` and serve it with Python:
+And run the browser tests. They stage `_site/` and serve it with `scripts/serve.mjs`, which uses Node built-ins only:
 
 ```bash
 npx playwright test
@@ -119,7 +131,7 @@ This repo uses a DevSecOps pipeline with five stages. Work can't move on until e
 | Control | Where | Run locally |
 |---------|-------|-------------|
 | GitHub Actions are pinned to full commit SHAs, and container images by digest | `scripts/check-inherit.mjs` | `node scripts/check-inherit.mjs` |
-| The CSP allows only `'self'`, plus `data:` images and `https://www.zeffy.com` frames. Every resource the page loads (scripts, styles, fonts, images, CSS `url()`) is same-origin. | `scripts/check-inherit.mjs` (`CSP_ALLOWED`) | same |
+| The CSP allows only `'self'` and `data:` images, with `frame-src 'none'`. Every resource the page loads (scripts, styles, fonts, images, CSS `url()`) is same-origin. | `scripts/check-inherit.mjs` (`CSP_ALLOWED`) | same |
 | Self-hosted fonts must match the sha256 recorded in `fonts/sources.json`. A new font needs an entry there. | `scripts/check-inherit.mjs` | same |
 | CI tooling lives in `tools/ci` with its own lockfile and is never shipped. The site itself has no dependencies. | `tools/ci/package.json` | — |
 | Vulnerable tooling (high or critical) fails CI | `inherit` job, `npm audit` | `cd tools/ci && npm audit --audit-level=high` |
@@ -132,7 +144,7 @@ This repo uses a DevSecOps pipeline with five stages. Work can't move on until e
 | Security updates arrive immediately, one PR per advisory | Repo setting (Dependabot security updates) | — |
 
 **Third-party services:**
-- **At runtime:** Zeffy (payment forms, in an iframe; the only third-party origin the page contacts) and GitHub Pages (hosting).
+- **At runtime:** GitHub Pages (hosting). The page contacts no other origin. Payments link out to Zeffy's site.
 - **Behind the scenes:** Squarespace (domain registration and DNS) and Google Workspace (`@kp-pto.org` email).
 - **Fonts:** Fjalla One and Lato come from Google Fonts but are downloaded once and self-hosted under the SIL OFL 1.1, so there's no runtime request to Google.
 
@@ -140,7 +152,7 @@ This repo uses a DevSecOps pipeline with five stages. Work can't move on until e
 The site is hosted on **GitHub Pages** from `Original-Carl/kp-pto`. The domain is registered at **Squarespace Domains**, which only provides DNS here; Squarespace can't host a hand-built site.
 
 - Every pull request and every push to `main` runs CI (`.github/workflows/ci.yml`).
-- When CI passes on a push to `main`, `.github/workflows/deploy.yml` publishes that commit's `index.html`, `css/`, `js/`, `fonts/`, and `assets/` to Pages, staged by `scripts/stage-site.mjs`.
+- When CI passes on a push to `main`, `.github/workflows/deploy.yml` publishes that commit's pages (`*.html`), `css/`, `js/`, `fonts/`, and `assets/` to Pages, staged by `scripts/stage-site.mjs`.
 - `main` is protected, so all changes go through a PR.
 
 ### Pointing kp-pto.org at GitHub Pages (one-time setup)

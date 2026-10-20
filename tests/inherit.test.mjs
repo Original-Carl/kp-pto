@@ -31,8 +31,10 @@ test("action pins: tags, short SHAs, and tagged images fail", () => {
 });
 
 test("CSP: the site's policy passes", () => {
-  const html = csp("default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; frame-src https://www.zeffy.com; base-uri 'self'; form-action 'self'");
+  const html = csp("default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; frame-src 'none'; base-uri 'self'; form-action 'self'");
   assert.deepEqual(checkCsp(html), []);
+  // The site links out to Zeffy instead of embedding it, so no frame origin is allowed.
+  assert.equal(checkCsp(csp("default-src 'self'; frame-src https://www.zeffy.com")).length, 1);
 });
 
 test("CSP: missing policy, missing default-src, and new origins fail", () => {
@@ -174,4 +176,9 @@ test("action pins: *_IMAGE env vars must be pinned by digest", () => {
   const bad = ["          SEMGREP_IMAGE: semgrep/semgrep:latest", "          GITLEAKS_IMAGE: zricethezav/gitleaks:latest", "          scan-image: alpine:3"];
   for (const line of bad) assert.equal(checkActionPins({ "w.yml": line }).length, 1, `not caught: ${line}`);
   assert.deepEqual(checkActionPins({ "w.yml": `          SEMGREP_IMAGE: semgrep/semgrep@sha256:${DIGEST} # 1.178.0` }), []);
+});
+
+test("multi-page: errors name the page they came from", () => {
+  assert.match(checkCsp("<html></html>", "about.html")[0], /^about\.html:/);
+  assert.match(checkHtmlLoads(`<script src="https://evil.example/x.js"></script>`, "contact.html")[0], /^contact\.html:/);
 });

@@ -1,5 +1,5 @@
 // Build stage browser tests. Locally and in CI they run against _site/ (what
-// ships), served by Python's static server. Set BASE_URL to test a deployed
+// ships), served by scripts/serve.mjs. Set BASE_URL to test a deployed
 // site instead (Deploy/Operate stages); then no local server is started.
 import { defineConfig, devices } from "@playwright/test";
 
@@ -18,9 +18,8 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } } },
   ],
   webServer: process.env.BASE_URL ? undefined : {
-    command: `node ../../scripts/stage-site.mjs && python3 -m http.server ${PORT} --bind 127.0.0.1 --directory ../../_site`,
+    command: `node ../../scripts/stage-site.mjs && node ../../scripts/serve.mjs ${PORT}`,
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
-    stderr: "ignore", // python logs every request to stderr
   },
 });
