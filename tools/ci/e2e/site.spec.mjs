@@ -190,16 +190,22 @@ test("events: upcoming ones sorted by date, past ones hidden", async ({ page }) 
   await page.route("**/js/events.js", (route) => route.fulfill({
     contentType: "text/javascript",
     body: `window.PTO_EVENTS = ${JSON.stringify([
-      { date: isoDate(30), title: "Later event", time: "7:00 PM", location: "Library" },
+      { date: isoDate(60), title: "Later event", time: "7:00 PM", location: "Library" },
       { date: isoDate(-1), title: "Past event" },
       { date: isoDate(0), title: "Today event" },
+      { date: isoDate(-2), end: isoDate(1), title: "Ongoing event" },
       { date: "not-a-date", title: "Broken event" },
     ])};`,
   }));
   await page.goto("events.html");
   const titles = page.locator("#event-list .event-title");
-  await expect(titles).toHaveText(["Today event", "Later event"]);
-  await expect(page.locator("#event-list .event-meta").first()).toHaveText("7:00 PM · Library");
+  await expect(titles).toHaveText(["Ongoing event", "Today event", "Later event"]);
+  await expect(page.locator("#event-list .event-meta").last()).toHaveText("7:00 PM · Library");
+  // Multi-day events show their range; each month gets one heading.
+  await expect(page.locator("#event-list .event-meta").first()).toHaveText(/^[A-Z][a-z]{2} \d{1,2}(–\d{1,2}| – [A-Z][a-z]{2} \d{1,2})$/);
+  const headings = await page.locator("#event-list .event-month-heading").allTextContents();
+  expect(new Set(headings).size).toBe(headings.length);
+  expect(headings.length).toBeGreaterThanOrEqual(2); // today and +60 days are in different months
   await expect(page.locator("#events-empty")).toBeHidden();
 });
 

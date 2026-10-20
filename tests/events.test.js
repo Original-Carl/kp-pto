@@ -50,3 +50,24 @@ test("isZeffyUrl only accepts https://www.zeffy.com/ URLs", () => {
   assert.equal(isZeffyUrl(undefined), false);
   assert.equal(isZeffyUrl("  https://www.zeffy.com/embed/x  "), true);
 });
+
+test("multi-day events stay listed until their end date", () => {
+  const { upcomingEvents } = require("../js/main.js");
+  const today = new Date(2026, 10, 19); // Nov 19 2026
+  const events = [
+    { date: "2026-11-18", end: "2026-11-20", title: "Fall Conferences" },
+    { date: "2026-11-01", end: "2026-11-07", title: "Over last week" },
+    { date: "2026-11-10", end: "not-a-date", title: "Bad end, past start" },
+    { date: "2026-11-25", end: "2026-11-20", title: "End before start" },
+  ];
+  const result = upcomingEvents(events, today);
+  assert.deepEqual(result.map((e) => e.title), ["Fall Conferences", "End before start"]);
+  assert.equal(result[1].parsedEnd, null);
+});
+
+test("dateRangeLabel formats same-month and cross-month ranges", () => {
+  const { dateRangeLabel } = require("../js/main.js");
+  assert.equal(dateRangeLabel(new Date(2026, 10, 18), new Date(2026, 10, 20)), "Nov 18–20");
+  assert.equal(dateRangeLabel(new Date(2027, 2, 31), new Date(2027, 3, 3)), "Mar 31 – Apr 3");
+  assert.equal(dateRangeLabel(new Date(2026, 10, 18), null), "");
+});

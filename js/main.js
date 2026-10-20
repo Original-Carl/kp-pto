@@ -2,6 +2,7 @@
 
 const ZEFFY_ORIGIN = "https://www.zeffy.com/";
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 // Parse "YYYY-MM-DD" as a local date (new Date("YYYY-MM-DD") would be UTC midnight,
 // which shows the previous day in US time zones). Returns null for bad input.
@@ -14,13 +15,28 @@ function parseLocalDate(value) {
   return date;
 }
 
-// Events on or after today, sorted soonest first. Entries with bad dates are dropped.
+// Events that haven't finished yet (multi-day events stay until their `end`
+// date), sorted by start date. Entries with a bad date or title are dropped; a
+// bad or earlier-than-start `end` is ignored (treated as a one-day event).
 function upcomingEvents(events, today) {
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   return (Array.isArray(events) ? events : [])
-    .map((event) => ({ ...event, parsedDate: parseLocalDate(event && event.date) }))
-    .filter((event) => event.parsedDate && event.title && event.parsedDate >= startOfToday)
+    .map((event) => {
+      const parsedDate = parseLocalDate(event && event.date);
+      const end = parseLocalDate(event && event.end);
+      return { ...event, parsedDate, parsedEnd: end && parsedDate && end > parsedDate ? end : null };
+    })
+    .filter((event) => event.parsedDate && event.title && (event.parsedEnd || event.parsedDate) >= startOfToday)
     .sort((a, b) => a.parsedDate - b.parsedDate);
+}
+
+// "Nov 18–20" or "Mar 31 – Apr 3" for a multi-day event; "" for one day.
+function dateRangeLabel(start, end) {
+  if (!end) return "";
+  const startLabel = `${MONTHS[start.getMonth()]} ${start.getDate()}`;
+  return start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()
+    ? `${startLabel}–${end.getDate()}`
+    : `${startLabel} – ${MONTHS[end.getMonth()]} ${end.getDate()}`;
 }
 
 function isZeffyUrl(value) {
@@ -32,7 +48,20 @@ function renderEvents(listEl, emptyEl, events, today) {
   listEl.replaceChildren();
   emptyEl.hidden = upcoming.length > 0;
 
+  let currentMonth = "";
   for (const event of upcoming) {
+    // A heading before the first event of each month keeps a long list scannable.
+    const monthLabel = `${MONTH_NAMES[event.parsedDate.getMonth()]} ${event.parsedDate.getFullYear()}`;
+    if (monthLabel !== currentMonth) {
+      currentMonth = monthLabel;
+      const heading = document.createElement("li");
+      heading.className = "event-month-heading";
+      const h3 = document.createElement("h3");
+      h3.textContent = monthLabel;
+      heading.append(h3);
+      listEl.append(heading);
+    }
+
     const item = document.createElement("li");
     item.className = "event";
 
@@ -48,12 +77,12 @@ function renderEvents(listEl, emptyEl, events, today) {
     date.append(month, day);
 
     const body = document.createElement("div");
-    const title = document.createElement("h3");
+    const title = document.createElement("h4");
     title.className = "event-title";
     title.textContent = event.title;
     body.append(title);
 
-    const meta = [event.time, event.location].filter(Boolean).join(" · ");
+    const meta = [dateRangeLabel(event.parsedDate, event.parsedEnd), event.time, event.location].filter(Boolean).join(" · ");
     if (meta) {
       const metaEl = document.createElement("p");
       metaEl.className = "event-meta";
@@ -113,5 +142,5 @@ if (typeof document !== "undefined") {
 }
 
 if (typeof module !== "undefined") {
-  module.exports = { parseLocalDate, upcomingEvents, isZeffyUrl };
+  module.exports = { parseLocalDate, upcomingEvents, dateRangeLabel, isZeffyUrl };
 }
