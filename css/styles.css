@@ -151,7 +151,14 @@ a:focus-visible, button:focus-visible {
   color: var(--color-text);
   text-decoration: none;
 }
-.brand-mark { color: var(--color-brand); flex-shrink: 0; }
+/* The logo images have white backgrounds; a white tile keeps them clean on dark and blue. */
+.brand-logo {
+  display: block;
+  width: 60px;
+  height: 48px;
+  background: #ffffff;
+  border-radius: 6px;
+}
 
 .nav-toggle {
   display: inline-flex;
@@ -242,6 +249,14 @@ address { font-style: normal; }
 }
 .lead { font-size: 1.15rem; color: var(--color-muted); }
 .cta-row { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+.hero-logo {
+  width: min(100%, 320px);
+  margin: 0 auto 24px;
+  padding: 12px;
+  background: #ffffff;
+  border-radius: 16px;
+}
+.hero-logo img { display: block; width: 100%; height: auto; }
 
 .section { padding: 48px 0; }
 .section-alt { background: var(--color-bg-alt); }
@@ -362,6 +377,8 @@ address { font-style: normal; }
   h1 { font-size: 2.75rem; }
   h2 { font-size: 2rem; }
   .hero { padding: 88px 0 72px; }
+  .hero-inner { display: grid; grid-template-columns: 1fr 320px; gap: 48px; align-items: center; }
+  .hero-logo { order: 2; margin: 0; }
   .section { padding: 72px 0; }
   .cta-row { flex-direction: row; }
   .card-grid { grid-template-columns: 1fr 1fr; }

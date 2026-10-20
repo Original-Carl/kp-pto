@@ -27,12 +27,8 @@
   <header class="site-header">
     <div class="container header-inner">
       <a class="brand" href="/" aria-label="King Philip Middle School PTO home">
-        <!-- Inline placeholder mark (saves a request). Swap for the official logo when there is one. -->
-        <svg class="brand-mark" viewBox="0 0 40 40" width="36" height="36" aria-hidden="true">
-          <rect width="40" height="40" rx="8" fill="currentColor"/>
-          <text x="20" y="26" text-anchor="middle" font-size="16" font-weight="700" font-family="system-ui, sans-serif" fill="#fff">KP</text>
-        </svg>
-        <span>KP PTO</span>
+        <!-- Official PTO logo, 2x size for sharp phone screens (source: brand/). -->
+        <img class="brand-logo" src="/assets/logo-header.webp" width="60" height="48" alt="">
       </a>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
         <span class="nav-toggle-bar" aria-hidden="true"></span>
@@ -53,13 +49,19 @@
 
   <main id="main">
     <section class="hero">
-      <div class="container">
-        <p class="eyebrow">King Philip Middle School</p>
-        <h1>Parent Teacher Organization</h1>
-        <p class="lead">Our mission is to fund, organize, support, coordinate, and facilitate programs and opportunities that support the students and teachers of King Philip Middle School.</p>
-        <div class="cta-row">
-          <a class="btn btn-primary" href="/support.html">Support the PTO</a>
-          <a class="btn btn-secondary" href="/volunteer.html">Volunteer</a>
+      <div class="container hero-inner">
+        <div class="hero-logo">
+          <img src="/assets/logo-home.webp" width="320" height="263" alt="KP PTO logo: Parents, Teachers, Our Students">
+        </div>
+        <div class="hero-text">
+          <p class="eyebrow">King Philip Middle School</p>
+          <h1>Parent Teacher Organization</h1>
+          <p class="lead">Our mission is to fund, organize, support, coordinate, and facilitate programs and opportunities that support the students and teachers of King Philip Middle School.</p>
+          <div class="cta-row">
+            <!-- General donation form on Zeffy (approved by the fundraising chair for general giving). -->
+            <a class="btn btn-primary" data-zeffy-form="donate" href="https://www.zeffy.com/en-US/donation-form/kp-pto-202020-campaign">Donate</a>
+            <a class="btn btn-secondary" href="/volunteer.html">Volunteer</a>
+          </div>
         </div>
       </div>
     </section>
