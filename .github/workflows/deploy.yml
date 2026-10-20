@@ -5,6 +5,13 @@ name: Deploy
 # public files (scripts/stage-site.mjs); tests, tools, and docs stay out.
 # The custom domain (kp-pto.org) is set in repo Settings → Pages, not via a
 # CNAME file — Actions-based Pages deployments ignore CNAME files.
+#
+# After deploying, `smoke` waits until the live version.json reports this
+# commit, then runs the phone browser tests against the live site. A red smoke
+# run means the site is live but broken: see docs/RUNBOOK.md → Rollback.
+#
+# SITE_URL: repository variable (Settings → Secrets and variables → Actions →
+# Variables); defaults to https://kp-pto.org/.
 
 on:
   workflow_run:
@@ -14,6 +21,9 @@ on:
 
 permissions:
   contents: read
+
+env:
+  SITE_URL: ${{ vars.SITE_URL || 'https://kp-pto.org/' }}
 
 jobs:
   deploy:
@@ -49,6 +59,8 @@ jobs:
         with:
           node-version-file: .nvmrc
       - name: Stage public files
+        env:
+          SITE_COMMIT: ${{ github.sha }}
         run: node scripts/stage-site.mjs
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
@@ -56,3 +68,50 @@ jobs:
           path: _site
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  smoke:
+    name: smoke (live site)
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # GitHub Pages' CDN can serve the old version for a few minutes.
+      - name: Wait for the live site to serve this commit
+        run: |
+          for i in $(seq 1 60); do
+            live=$(curl -fsS --max-time 10 "${SITE_URL%/}/version.json" | jq -r .commit 2>/dev/null || true)
+            if [ "$live" = "$GITHUB_SHA" ]; then
+              echo "Live after $((i * 10))s: \`${GITHUB_SHA:0:7}\` at $SITE_URL" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "Live commit is '${live:0:7}', waiting for ${GITHUB_SHA:0:7}…"
+            sleep 10
+          done
+          echo "::error::$SITE_URL still isn't serving ${GITHUB_SHA:0:7} after 10 minutes"
+          exit 1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: tools/ci/package-lock.json
+      - name: Install tools/ci
+        working-directory: tools/ci
+        run: npm ci --no-fund --no-audit
+      - name: Install Chromium
+        working-directory: tools/ci
+        run: npx playwright install --with-deps chromium
+      - name: Browser tests against the live site (phone)
+        working-directory: tools/ci
+        env:
+          BASE_URL: ${{ env.SITE_URL }}
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: npx playwright test --project=mobile
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: smoke-report
+          path: tools/ci/playwright-report
+          retention-days: 14

@@ -184,3 +184,14 @@ test("Zeffy: a real embed URL becomes a lazy, titled iframe", async ({ page }) =
   await expect(iframe).toHaveAttribute("title", "Contribution form powered by Zeffy");
   await expect(iframe).toHaveAttribute("loading", "lazy");
 });
+
+test("version.json says which commit is live", async ({ request }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile", "one check is enough");
+  const res = await request.get("version.json");
+  expect(res.ok()).toBe(true);
+  const { commit, built_at } = await res.json();
+  expect(commit).toMatch(/^[0-9a-f]{40}$/);
+  expect(Number.isNaN(Date.parse(built_at))).toBe(false);
+  // The deploy's smoke test sets this to the commit it just deployed.
+  if (process.env.EXPECTED_COMMIT) expect(commit).toBe(process.env.EXPECTED_COMMIT);
+});
