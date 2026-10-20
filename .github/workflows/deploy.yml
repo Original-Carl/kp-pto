@@ -34,7 +34,9 @@ jobs:
     # Only after CI passed for a push to main (never for PRs or other branches),
     # and only for the commit that's still main's tip: re-running an old CI or
     # Deploy run must not roll the site back. (For workflow_run, github.sha is
-    # the current tip of main; a newer commit's own CI run deploys it.)
+    # main's tip when the run was created; a newer commit's own CI run deploys
+    # it.) A re-run keeps its original github.sha, so the first step re-checks
+    # main's tip at run time.
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
@@ -53,8 +55,15 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      # The job's `if` guarantees main's tip (github.sha, checked out by
-      # default) is exactly the commit CI tested, so no ref is needed.
+      - name: Refuse if main has moved on (re-run of an old Deploy run)
+        run: |
+          tip=$(git ls-remote "https://github.com/$GITHUB_REPOSITORY" refs/heads/main | cut -f1)
+          if [ "$tip" != "$GITHUB_SHA" ]; then
+            echo "::error::main is now ${tip:0:7}, not ${GITHUB_SHA:0:7}; deploying this would roll the site back. Re-run the latest Deploy run instead."
+            exit 1
+          fi
+      # The job's `if` and the step above guarantee main's tip (github.sha,
+      # checked out by default) is exactly the commit CI tested, so no ref is needed.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -76,19 +85,26 @@ jobs:
     name: smoke (live site)
     needs: deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
+    # A newer deploy makes an older smoke run moot (its commit is no longer
+    # live), so cancel it rather than let it fail.
+    concurrency:
+      group: smoke
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # GitHub Pages' CDN can serve the old version for a few minutes. The
-      # query string skips any cached copy.
+      # GitHub Pages' CDN can serve the old version for a few minutes. This
+      # polls the plain URL (no cache-buster), the same one visitors and the
+      # browser test get.
       - name: Wait for the live site to serve this commit
         run: |
-          for i in $(seq 1 60); do
-            live=$(curl -fsS --max-time 10 "${SITE_URL%/}/version.json?t=$(date +%s)" | jq -r .commit 2>/dev/null || true)
+          deadline=$((SECONDS + 600))
+          while [ "$SECONDS" -lt "$deadline" ]; do
+            live=$(curl -fsS --max-time 10 "${SITE_URL%/}/version.json" | jq -r .commit 2>/dev/null || true)
             if [ "$live" = "$GITHUB_SHA" ]; then
-              echo "Live after about $((i * 10))s: \`${GITHUB_SHA:0:7}\` at $SITE_URL" >> "$GITHUB_STEP_SUMMARY"
+              echo "Live after ${SECONDS}s: \`${GITHUB_SHA:0:7}\` at $SITE_URL" >> "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
             echo "Live commit is '${live:0:7}', waiting for ${GITHUB_SHA:0:7}…"

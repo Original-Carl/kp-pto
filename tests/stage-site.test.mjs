@@ -15,6 +15,13 @@ test("version.json: falls back to git HEAD, trimmed", () => {
   assert.equal(siteVersion({}, () => `${SHA}\n`, NOW).commit, SHA);
 });
 
+test("version.json: SITE_COMMIT is trimmed and lowercased; an empty one falls back to git", () => {
+  assert.equal(siteVersion({ SITE_COMMIT: ` ${SHA.toUpperCase()}\n` }, noGit, NOW).commit, SHA);
+  assert.equal(siteVersion({ SITE_COMMIT: "" }, () => SHA, NOW).commit, SHA);
+});
+
+// A set-but-invalid SITE_COMMIT never falls back to git: the deploy always sets
+// it, so a bad value should show up as "unknown", not as some other commit.
 test("version.json: no git, or not a full SHA, means 'unknown'", () => {
   assert.equal(siteVersion({}, () => { throw new Error("not a git repo"); }, NOW).commit, "unknown");
   assert.equal(siteVersion({ SITE_COMMIT: SHA.slice(0, 7) }, noGit, NOW).commit, "unknown");

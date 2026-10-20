@@ -12,14 +12,19 @@ keep the site and the `@kp-pto.org` email working.
    trigger). Its `deploy` job runs only if all of these hold:
    - CI succeeded, for a **push** (never a PR) to `main`;
    - the commit CI tested is **still `main`'s tip**. If another PR merged in the
-     meantime, this run skips and the newer commit's own CI run deploys it. Re-running
-     an old run therefore can't roll the site back.
+     meantime, this run skips and the newer commit's own CI run deploys it.
+
+   A re-run keeps the commit its run started with, so `deploy`'s first step checks
+   `main`'s tip again at run time and fails ("main is now …") if `main` has moved on.
+   Re-running an old CI or Deploy run therefore can't roll the site back.
 4. `deploy` stages exactly the public files into `_site/` (`scripts/stage-site.mjs`),
    writes `_site/version.json` (`{"commit": "<sha>", "built_at": "<time>"}`), and
    publishes it to GitHub Pages.
-5. `smoke (live site)` polls `https://kp-pto.org/version.json` every 10 seconds until it
-   reports the commit just deployed (up to 10 minutes, because the Pages CDN can lag).
-   Then it runs the phone browser tests against the live site.
+5. `smoke (live site)` polls `${SITE_URL}version.json` (the plain URL visitors get)
+   every 10 seconds until it reports the commit just deployed, for up to 10 minutes,
+   because the Pages CDN can lag. Then it runs the phone browser tests against the live
+   site. If a newer commit deploys while it runs, the older smoke run is cancelled, not
+   failed.
 
 The `github-pages` environment (Settings → Environments → github-pages) also allows
 deployments from the `main` branch only (a custom deployment branch policy), so no other
@@ -40,12 +45,15 @@ curl -s https://kp-pto.org/version.json
 A red `smoke (live site)` means the new version **is already live** and something on
 it failed.
 
-1. Open the failed Deploy run and download the `smoke-report` artifact (the Playwright
-   HTML report) to see what failed.
-2. If the "Wait for the live site" step timed out, GitHub Pages was slow or down. Check
+1. Check that this run is for the commit that's live now (`version.json`). If a newer
+   commit has deployed since, this result is out of date; look at the newer run instead.
+2. If the "Wait for the live site" step timed out, GitHub Pages was slow or down, and
+   the browser tests never ran (so there's no report). Check
    https://www.githubstatus.com, then use **Re-run failed jobs** on that run.
-3. If a test failed and the site really is broken, roll back (below). If it was a
-   one-off glitch (a timeout, a network error), use **Re-run failed jobs**.
+3. If the browser tests failed, download the run's `smoke-report` artifact (the
+   Playwright HTML report) to see what failed. If the site really is broken, roll back
+   (below). If it was a one-off glitch (a timeout, a network error), use **Re-run failed
+   jobs**.
 
 ## Rollback
 
@@ -64,8 +72,9 @@ If several PRs need undoing, revert them newest first, or revert them together i
 
 To publish `main`'s tip again (for example after a GitHub Pages outage, or after a
 settings change), open **Actions → Deploy**, pick the **latest** run, and choose
-**Re-run all jobs**. Only the run for `main`'s tip deploys; an older run's `deploy` job
-skips. There's no manual "Run workflow" button.
+**Re-run all jobs**. Only the run for `main`'s tip deploys; on an older run, `deploy`
+fails at its first step instead of publishing an old commit. There's no manual "Run
+workflow" button.
 
 ## Content updates
 
