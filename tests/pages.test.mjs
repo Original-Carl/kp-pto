@@ -13,7 +13,7 @@ const PAGES = readdirSync(ROOT).filter((f) => f.endsWith(".html")).sort();
 const read = (f) => readFileSync(join(ROOT, f), "utf8");
 
 // Organization details exactly as registered with Google for Nonprofits.
-const ORG = "King Philip Middle School PTO Inc.";
+const ORG = "King Philip Middle School PTO, Inc.";
 const EIN = "41-3002032";
 const STREET = "100 King Philip Drive";
 const CITY = "West Hartford, CT 06117";
@@ -22,7 +22,7 @@ const CITY = "West Hartford, CT 06117";
 // until Google reactivates the account. Then set this to "info@kp-pto.org" and replace the
 // address on every page.
 const EMAIL = "kppto678@gmail.com";
-const OWNERSHIP = "kp-pto.org is the official website of King Philip Middle School PTO Inc.";
+const OWNERSHIP = "kp-pto.org is the official website of King Philip Middle School PTO, Inc.";
 const MISSION = "Our mission is to fund, organize, support, coordinate, and facilitate programs and opportunities that support the students and teachers of King Philip Middle School.";
 
 const block = (html, tag) => {

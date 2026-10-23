@@ -23,7 +23,7 @@ const ALL_PAGES = [
 ];
 
 // Organization details as registered with Google for Nonprofits.
-const ORG = "King Philip Middle School PTO Inc.";
+const ORG = "King Philip Middle School PTO, Inc.";
 const EIN = "41-3002032";
 const STREET = "100 King Philip Drive";
 const CITY = "West Hartford, CT 06117";
