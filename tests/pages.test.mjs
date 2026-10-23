@@ -17,8 +17,11 @@ const ORG = "King Philip Middle School PTO Inc.";
 const EIN = "41-3002032";
 const STREET = "100 King Philip Drive";
 const CITY = "West Hartford, CT 06117";
-// Contact email on the PTO's own domain (Google for Nonprofits asked for no generic addresses).
-const EMAIL = "info@kp-pto.org";
+// Contact email. TEMPORARY: Google for Nonprofits wants an @kp-pto.org address, but the
+// Workspace trial expired before info@kp-pto.org could be created, so the working Gmail stays
+// until Google reactivates the account. Then set this to "info@kp-pto.org" and replace the
+// address on every page.
+const EMAIL = "kppto678@gmail.com";
 const OWNERSHIP = "kp-pto.org is the official website of King Philip Middle School PTO Inc.";
 const MISSION = "Our mission is to fund, organize, support, coordinate, and facilitate programs and opportunities that support the students and teachers of King Philip Middle School.";
 
@@ -127,16 +130,14 @@ test("robots.txt allows crawling and points at the sitemap", () => {
   assert.match(robots, /^Sitemap: https:\/\/kp-pto\.org\/sitemap\.xml$/m);
 });
 
-test("contact email is on the PTO's own domain everywhere; no generic addresses", () => {
+test("one contact email everywhere, and the footer states the site is the PTO's", () => {
   const footer = block(read("index.html"), "footer");
   assert.ok(footer.includes(`mailto:${EMAIL}`), "footer should link to the PTO email");
   assert.ok(footer.includes(OWNERSHIP), "footer should state the site belongs to the PTO");
   const ld = JSON.parse(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(read("about.html"))[1]);
   assert.equal(ld.email, EMAIL);
   for (const page of PAGES) {
-    const html = read(page);
-    assert.ok(!/@(gmail|yahoo|hotmail|outlook|aol|icloud)\.com/i.test(html), `${page} shows a generic email address`);
-    for (const [, addr] of html.matchAll(/mailto:([^"?]+)/g)) assert.ok(addr.endsWith("@kp-pto.org"), `${page}: ${addr} isn't on kp-pto.org`);
+    for (const [, addr] of read(page).matchAll(/mailto:([^"?]+)/g)) assert.equal(addr, EMAIL, `${page}: unexpected address ${addr}`);
   }
 });
 

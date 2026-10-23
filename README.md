@@ -41,7 +41,7 @@ These must match what's registered with Google for Nonprofits exactly. They appe
 
 - **Legal name:** King Philip Middle School PTO Inc.
 - **EIN (Charity ID):** 41-3002032
-- **Email:** info@kp-pto.org, on the PTO's own domain. Google rejects generic addresses such as Gmail, and `tests/pages.test.mjs` blocks them.
+- **Email:** kppto678@gmail.com, **temporarily**. Google for Nonprofits wants an @kp-pto.org address, but `info@kp-pto.org` can't be created until Google reactivates the Workspace account, since the trial expired. Once it exists, replace the address on every page and update `EMAIL` in `tests/pages.test.mjs`.
 - **Address:** C/O King Philip Middle School, 100 King Philip Drive, West Hartford, CT 06117
 
 `tests/pages.test.mjs` and the browser tests check for these exact values.
