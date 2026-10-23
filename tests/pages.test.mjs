@@ -13,10 +13,16 @@ const PAGES = readdirSync(ROOT).filter((f) => f.endsWith(".html")).sort();
 const read = (f) => readFileSync(join(ROOT, f), "utf8");
 
 // Organization details exactly as registered with Google for Nonprofits.
-const ORG = "King Philip Middle School PTO Inc.";
+const ORG = "King Philip Middle School PTO, Inc.";
 const EIN = "41-3002032";
 const STREET = "100 King Philip Drive";
 const CITY = "West Hartford, CT 06117";
+// Contact email. TEMPORARY: Google for Nonprofits wants an @kp-pto.org address, but the
+// Workspace trial expired before info@kp-pto.org could be created, so the working Gmail stays
+// until Google reactivates the account. Then set this to "info@kp-pto.org" and replace the
+// address on every page.
+const EMAIL = "kppto678@gmail.com";
+const OWNERSHIP = "kp-pto.org is the official website of King Philip Middle School PTO, Inc.";
 const MISSION = "Our mission is to fund, organize, support, coordinate, and facilitate programs and opportunities that support the students and teachers of King Philip Middle School.";
 
 const block = (html, tag) => {
@@ -39,7 +45,7 @@ const visibleMain = (html) => /<main\b[\s\S]*?<\/main>/.exec(html)[0]
 const fileFor = (href) => (href === "/" ? "index.html" : href.replace(/^\//, ""));
 
 test("there are several pages, not just one", () => {
-  for (const page of ["index.html", "about.html", "events.html", "support.html", "volunteer.html", "contact.html", "404.html"]) {
+  for (const page of ["index.html", "about.html", "programs.html", "events.html", "support.html", "volunteer.html", "contact.html", "404.html"]) {
     assert.ok(PAGES.includes(page), `${page} is missing`);
   }
 });
@@ -122,4 +128,23 @@ test("robots.txt allows crawling and points at the sitemap", () => {
   assert.match(robots, /^User-agent: \*$/m);
   assert.ok(!/^Disallow: \/\s*$/m.test(robots), "robots.txt blocks the whole site");
   assert.match(robots, /^Sitemap: https:\/\/kp-pto\.org\/sitemap\.xml$/m);
+});
+
+test("one contact email everywhere, and the footer states the site is the PTO's", () => {
+  const footer = block(read("index.html"), "footer");
+  assert.ok(footer.includes(`mailto:${EMAIL}`), "footer should link to the PTO email");
+  assert.ok(footer.includes(OWNERSHIP), "footer should state the site belongs to the PTO");
+  const ld = JSON.parse(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(read("about.html"))[1]);
+  assert.equal(ld.email, EMAIL);
+  for (const page of PAGES) {
+    for (const [, addr] of read(page).matchAll(/mailto:([^"?]+)/g)) assert.equal(addr, EMAIL, `${page}: unexpected address ${addr}`);
+  }
+});
+
+test("the Programs page describes the PTO's programs", () => {
+  const main = visibleMain(read("programs.html"));
+  for (const heading of ["Staff Appreciation", "Field Trips", "Scholarship Fund", "School Events", "PTO Meetings"]) {
+    assert.ok(main.includes(`>${heading}</h2>`), `programs.html is missing "${heading}"`);
+  }
+  assert.ok((main.match(/<article class="program"/g) || []).length >= 6, "expected at least 6 programs");
 });

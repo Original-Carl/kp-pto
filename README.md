@@ -12,7 +12,8 @@ It's built mobile-first for phones on slow connections:
 | Path | What it is |
 |------|------------|
 | `index.html` | Home: mission banner and links to each page |
-| `about.html` | Mission, programs, and organization details (legal name, EIN, address), plus JSON-LD |
+| `about.html` | Mission, what the PTO funds, and organization details (legal name, EIN, address, email), plus JSON-LD |
+| `programs.html` | A section for each PTO program (staff appreciation, field trips, basketball, scholarship, events, meetings, and so on) |
 | `events.html` | Upcoming events (from `js/events.js`) |
 | `support.html` | What contributions fund and ways to give (online via event links, check, cash) |
 | `volunteer.html` | Volunteer roles and sign-up |
@@ -38,9 +39,11 @@ Every page carries its own copy of the header (logo and nav) and the footer (leg
 ### Organization details
 These must match what's registered with Google for Nonprofits exactly. They appear in the footer of every page and on `about.html`, including its JSON-LD block:
 
-- **Legal name:** King Philip Middle School PTO Inc.
+- **Legal name:** King Philip Middle School PTO, Inc.
 - **EIN (Charity ID):** 41-3002032
+- **Email:** kppto678@gmail.com, **temporarily**. Google for Nonprofits wants an @kp-pto.org address, but `info@kp-pto.org` can't be created until Google reactivates the Workspace account, since the trial expired. Once it exists, replace the address on every page and update `EMAIL` in `tests/pages.test.mjs`.
 - **Address:** C/O King Philip Middle School, 100 King Philip Drive, West Hartford, CT 06117
+  - This is the formal address on both IRS letters, confirmed by the treasurer on 2026-10-23. Always use it on the site, with the "C/O" line, even though the PTO informally uses just "100 King Philip Drive".
 
 `tests/pages.test.mjs` and the browser tests check for these exact values.
 

@@ -9,6 +9,7 @@ const PAGE_WEIGHT_BUDGET = 150 * 1024;
 const PAGES = [
   { path: "./", file: "index.html", tab: "Home", h1: "Parent Teacher Organization", title: "King Philip Middle School PTO" },
   { path: "about.html", file: "about.html", tab: "About", h1: "About Us", title: "About | King Philip Middle School PTO" },
+  { path: "programs.html", file: "programs.html", tab: "Programs", h1: "Our Programs", title: "Programs | King Philip Middle School PTO" },
   { path: "events.html", file: "events.html", tab: "Events", h1: "Events", title: "Events | King Philip Middle School PTO" },
   { path: "support.html", file: "support.html", tab: "Support", h1: "Support the PTO", title: "Support | King Philip Middle School PTO" },
   { path: "volunteer.html", file: "volunteer.html", tab: "Volunteer", h1: "Volunteer", title: "Volunteer | King Philip Middle School PTO" },
@@ -22,7 +23,7 @@ const ALL_PAGES = [
 ];
 
 // Organization details as registered with Google for Nonprofits.
-const ORG = "King Philip Middle School PTO Inc.";
+const ORG = "King Philip Middle School PTO, Inc.";
 const EIN = "41-3002032";
 const STREET = "100 King Philip Drive";
 const CITY = "West Hartford, CT 06117";

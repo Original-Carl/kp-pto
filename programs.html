@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; frame-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>Programs | King Philip Middle School PTO</title>
+  <meta name="description" content="Programs of King Philip Middle School PTO, Inc.: staff appreciation, field trips, basketball, scholarships, school events, and more.">
+  <link rel="canonical" href="https://kp-pto.org/programs.html">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kp-pto.org/programs.html">
+  <meta property="og:title" content="About | King Philip Middle School PTO">
+  <meta property="og:description" content="Programs of King Philip Middle School PTO, Inc.: staff appreciation, field trips, basketball, scholarships, school events, and more.">
+  <meta name="theme-color" content="#2e318e">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <!-- Self-hosted school-site fonts (see css/styles.css @font-face). Preload the two used above the fold. -->
+  <link rel="preload" href="/fonts/lato-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/fjalla-one-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/js/main.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- SHARED HEADER: keep identical on every page (tests/pages.test.mjs checks). -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/" aria-label="King Philip Middle School PTO home">
+        <!-- Official PTO logo, 2x size for sharp phone screens (source: brand/). -->
+        <img class="brand-logo" src="/assets/logo-header.webp" width="60" height="48" alt="">
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span class="nav-toggle-bar" aria-hidden="true"></span>
+        <span class="visually-hidden">Menu</span>
+      </button>
+      <nav id="site-nav" class="site-nav" aria-label="Primary">
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/about.html">About</a></li>
+          <li><a href="/programs.html" aria-current="page">Programs</a></li>
+          <li><a href="/events.html">Events</a></li>
+          <li><a href="/support.html">Support</a></li>
+          <li><a href="/volunteer.html">Volunteer</a></li>
+          <li><a href="/contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="page-hero">
+      <div class="container">
+        <h1>Our Programs</h1>
+        <p class="lead">What King Philip Middle School PTO, Inc. funds, organizes, and runs for KP students and staff.</p>
+      </div>
+    </section>
+
+    <section class="section" aria-label="Programs">
+      <div class="container narrow program-list-page">
+        <article class="program" aria-labelledby="staff-appreciation">
+          <h2 id="staff-appreciation">Staff Appreciation</h2>
+          <p>The board funds and arranges annual appreciation lunches for the teachers and staff of King Philip Middle School, and funds and staffs all staff appreciation days.</p>
+        </article>
+        <article class="program" aria-labelledby="school-support">
+          <h2 id="school-support">School Support</h2>
+          <p>The board provides supplementary funds for things like soda crackers in the Nurse’s Office.</p>
+        </article>
+        <article class="program" aria-labelledby="field-trips">
+          <h2 id="field-trips">Field Trips</h2>
+          <p>The board raises funds to support class field trips and outings. These funds cover transportation, admission, and other associated costs.</p>
+        </article>
+        <article class="program" aria-labelledby="basketball">
+          <h2 id="basketball">Basketball</h2>
+          <p>This year, the board approved funding for boys’ and girls’ basketball teams, open to all students.</p>
+        </article>
+        <article class="program" aria-labelledby="scholarship">
+          <h2 id="scholarship">Scholarship Fund</h2>
+          <p>The board supports a district-wide scholarship program for exceptional high school students with demonstrated financial need, and contributed to the fund last year.</p>
+        </article>
+        <article class="program" aria-labelledby="events">
+          <h2 id="events">School Events</h2>
+          <p>The board funds and staffs the Welcome Back Picnic, Movie Nights (<cite>The Princess Bride</cite> and <cite>The Outsiders</cite> this year!), the Halloween and Spring Dances, and the 8th Grade Formal Dance. Dates are on the <a href="/events.html">Events</a> page.</p>
+        </article>
+        <article class="program" aria-labelledby="meetings">
+          <h2 id="meetings">PTO Meetings</h2>
+          <p>PTO Board General Meetings are open to the public. Meetings are held on Zoom, and most are also held in the school library; dates are on the <a href="/events.html">Events</a> page.</p>
+        </article>
+        <article class="program" aria-labelledby="volunteering">
+          <h2 id="volunteering">Volunteering</h2>
+          <p>We are always looking for volunteers! See the <a href="/volunteer.html">Volunteer</a> page to get involved.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section-alt" aria-labelledby="funding-heading">
+      <div class="container narrow">
+        <h2 id="funding-heading">How Programs Are Funded</h2>
+        <p>Programs are paid for by contributions, made online through Zeffy or by check or cash at the KP Main Office.</p>
+        <a class="btn btn-primary" data-zeffy-form="donate" href="https://www.zeffy.com/en-US/donation-form/kp-pto-202020-campaign">Donate</a>
+        <p class="funding-more">More ways to give are on the <a href="/support.html">Support</a> page.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- SHARED FOOTER: keep identical on every page (tests/pages.test.mjs checks). -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-org">
+        <p class="footer-name">King Philip Middle School PTO, Inc.</p>
+        <address>C/O King Philip Middle School<br>100 King Philip Drive<br>West Hartford, CT 06117</address>
+        <p>EIN (Charity ID): 41-3002032</p>
+        <p>kp-pto.org is the official website of King Philip Middle School PTO, Inc.</p>
+      </div>
+      <div class="footer-links">
+        <p><a href="mailto:kppto678@gmail.com">kppto678@gmail.com</a></p>
+        <p><a href="https://kingphilip.whps.org/">King Philip Middle School website</a></p>
+        <p class="fine-print">&copy; <span id="year">2026</span> King Philip Middle School PTO, Inc.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
