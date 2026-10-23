@@ -331,6 +331,11 @@ address { font-style: normal; }
   background: var(--color-bg);
 }
 
+/* Programs page */
+.program + .program { margin-top: 32px; }
+.program h2 { font-size: 1.5rem; margin-bottom: 0.4em; }
+.funding-more { margin-top: 16px; }
+
 /* Programs list (About, Support) */
 .program-list { padding-left: 1.2em; margin: 0 0 1em; }
 .program-list li { margin-bottom: 4px; }

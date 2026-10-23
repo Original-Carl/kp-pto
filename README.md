@@ -12,7 +12,8 @@ It's built mobile-first for phones on slow connections:
 | Path | What it is |
 |------|------------|
 | `index.html` | Home: mission banner and links to each page |
-| `about.html` | Mission, programs, and organization details (legal name, EIN, address), plus JSON-LD |
+| `about.html` | Mission, what the PTO funds, and organization details (legal name, EIN, address, email), plus JSON-LD |
+| `programs.html` | A section for each PTO program (staff appreciation, field trips, basketball, scholarship, events, meetings, and so on) |
 | `events.html` | Upcoming events (from `js/events.js`) |
 | `support.html` | What contributions fund and ways to give (online via event links, check, cash) |
 | `volunteer.html` | Volunteer roles and sign-up |
@@ -40,6 +41,7 @@ These must match what's registered with Google for Nonprofits exactly. They appe
 
 - **Legal name:** King Philip Middle School PTO Inc.
 - **EIN (Charity ID):** 41-3002032
+- **Email:** info@kp-pto.org, on the PTO's own domain. Google rejects generic addresses such as Gmail, and `tests/pages.test.mjs` blocks them.
 - **Address:** C/O King Philip Middle School, 100 King Philip Drive, West Hartford, CT 06117
 
 `tests/pages.test.mjs` and the browser tests check for these exact values.
