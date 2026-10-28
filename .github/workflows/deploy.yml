@@ -95,28 +95,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # GitHub Pages' CDN can serve the old version for a few minutes. This
-      # polls the plain URL (no cache-buster), the same one visitors and the
-      # browser test get.
-      - name: Wait for the live site to serve this commit
-        run: |
-          deadline=$((SECONDS + 600))
-          while [ "$SECONDS" -lt "$deadline" ]; do
-            live=$(curl -fsS --max-time 10 "${SITE_URL%/}/version.json" | jq -r .commit 2>/dev/null || true)
-            if [ "$live" = "$GITHUB_SHA" ]; then
-              echo "Live after ${SECONDS}s: \`${GITHUB_SHA:0:7}\` at $SITE_URL" >> "$GITHUB_STEP_SUMMARY"
-              exit 0
-            fi
-            echo "Live commit is '${live:0:7}', waiting for ${GITHUB_SHA:0:7}…"
-            sleep 10
-          done
-          echo "::error::$SITE_URL still isn't serving ${GITHUB_SHA:0:7} after 10 minutes"
-          exit 1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: tools/ci/package-lock.json
+      # GitHub Pages' CDN can serve the old version for a few minutes; this
+      # polls version.json for up to 10 minutes (scripts/live-commit.mjs).
+      - name: Wait for the live site to serve this commit
+        run: node scripts/live-commit.mjs "$SITE_URL" --wait "$GITHUB_SHA"
       - name: Install tools/ci
         working-directory: tools/ci
         run: npm ci --no-fund --no-audit

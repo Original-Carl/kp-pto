@@ -26,10 +26,10 @@ It's built mobile-first for phones on slow connections:
 | `assets/` | Browser-tab icon (`favicon.svg`) and the site's logo images (`logo-header.webp`, `logo-home.webp`) |
 | `brand/` | Full-size logos for flyers and social posts (not shipped); see `brand/README.md` |
 | `fonts/` | Self-hosted woff2 fonts, their OFL licenses, and `sources.json` (origin and checksum for each font) |
-| `tests/` | Unit tests: events logic, the Inherit checks, page consistency (`pages.test.mjs`), and `version.json` (`stage-site.test.mjs`) |
-| `docs/RUNBOOK.md` | How deploys work, rollback, redeploying, content updates, and the DNS records to keep |
-| `scripts/` | Pipeline scripts: `check-inherit.mjs`, `check-licenses.mjs`, `check-content.mjs` (lists content still to add), and `stage-site.mjs` (copies the shipped files into `_site/` and writes `version.json`) |
-| `tools/ci/` | CI-only npm tooling (never shipped): Playwright, html-validate, and the browser tests in `tools/ci/e2e/` |
+| `tests/` | Unit tests: events logic, the Inherit checks, page consistency (`pages.test.mjs`), `version.json` (`stage-site.test.mjs`), and the Operate checks |
+| `docs/RUNBOOK.md` | How deploys work, rollback, redeploying, content updates, the DNS records to keep, and what to do when a weekly check fails |
+| `scripts/` | Pipeline scripts: `check-inherit.mjs`, `check-licenses.mjs`, `check-content.mjs` (lists content still to add), `stage-site.mjs` (copies the shipped files into `_site/` and writes `version.json`), `live-commit.mjs` (which commit is live), `check-domain.mjs`, and `check-lighthouse.mjs` |
+| `tools/ci/` | CI-only npm tooling (never shipped): Playwright, html-validate, Lighthouse, and the browser tests in `tools/ci/e2e/` |
 
 ## Editing content
 
@@ -112,7 +112,7 @@ To run the browser tests against a deployed site instead, set `BASE_URL`. Before
 
 ## Pipeline
 
-This repo uses a DevSecOps pipeline with five stages. Work can't move on until each stage's gate passes. The stages are being rolled out one at a time; a stage marked *planned* isn't live yet.
+This repo uses a DevSecOps pipeline with five stages. Work can't move on until each stage's gate passes.
 
 | Stage | What it covers | Gate |
 |-------|----------------|------|
@@ -120,7 +120,7 @@ This repo uses a DevSecOps pipeline with five stages. Work can't move on until e
 | **Inherit** | Everything the site uses but didn't write: GitHub Actions, CI tooling, fonts, and third-party services | The CI `inherit` job passes. Actions are pinned to commit SHAs and container images by digest. The page loads nothing from third parties beyond the CSP allowlist. Fonts match their recorded checksums. CI tooling has no high or critical vulnerabilities, no OSV findings, and only allowlisted licenses. Install scripts are denied unless reviewed. |
 | **Build** | CI (`.github/workflows/ci.yml`) runs `test` (unit tests), `verify` (html-validate, then Playwright on phone and desktop against exactly what ships, including a 150 KB budget for what the site itself serves), `secrets` (gitleaks over the full history), and `sast` (Semgrep CE). Semgrep's rulesets come from semgrep.dev on each run and aren't pinned, so a new rule can flag existing code. | Every required check passes on the PR: `test`, `inherit`, `verify`, `secrets`, and `sast`. Semgrep has no findings at any severity, and gitleaks finds no leaks. |
 | **Deploy** | GitHub Pages, deployed automatically on merge after CI passes, with a smoke test afterward. The site publishes `version.json` (`{commit, built_at}`) so anyone can see which commit is live. See [docs/RUNBOOK.md](docs/RUNBOOK.md) for rollback and redeploys. | `deploy.yml` runs only after CI succeeds on a push to `main`, and only if that commit is still `main`'s tip, checked again when the job runs, so re-running an old run can't roll the site back. The `github-pages` environment accepts deployments from `main` only. After deploying, the `smoke` job waits (up to 10 minutes) until the live `version.json` reports the deployed commit, then runs the phone browser tests against `SITE_URL` (`https://kp-pto.org/`). A red smoke job means the site is live but broken: revert the PR. |
-| **Operate** | Weekly checks of the live site, the domain, and email DNS | *Planned* |
+| **Operate** | `.github/workflows/operate.yml` runs every Monday at 11:00 UTC: `smoke` (the phone browser tests against the live site, using the tests from the live commit), `lighthouse` (every page, mobile on simulated slow 4G, median of 3 runs), `links` (lychee over every live page; Zeffy is excluded because it blocks automated requests), `domain` (DNS including the email records, redirects, and TLS expiry, against the baseline in `scripts/check-domain.mjs`), and `osv` (new advisories against `tools/ci`). It also runs on PRs that change those checks, and by hand from Actions → Operate → Run workflow. | All five jobs pass. Lighthouse budgets: performance ≥ 90, accessibility ≥ 95, best practices ≥ 90, SEO ≥ 90. The TLS certificate has more than 14 days left. A failure opens one **"Operate check failed"** issue, or comments on it if it's already open. See [docs/RUNBOOK.md → Monitoring](docs/RUNBOOK.md#monitoring). |
 
 ### Develop
 

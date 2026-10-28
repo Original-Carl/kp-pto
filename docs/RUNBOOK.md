@@ -152,3 +152,27 @@ dig +short kp-pto.org MX
 ```bash
 dig +short _github-pages-challenge-Original-Carl.kp-pto.org TXT
 ```
+
+## Monitoring
+
+`.github/workflows/operate.yml` checks the live site every Monday at 11:00 UTC (6–7 AM
+in West Hartford). To run it now: Actions → **Operate** → **Run workflow**.
+
+If any check fails, it opens an issue titled **"Operate check failed"** with a link to
+the run, or comments on that issue if it's still open. GitHub emails you about it.
+Fix the problem, run the workflow again to confirm it's green, then close the issue.
+
+| Failed job | What it means | What to do |
+|------------|---------------|------------|
+| `smoke (live site)` | The phone browser tests failed against the live site. | Same as [When the smoke job is red](#when-the-smoke-job-is-red); the report is the run's `operate-smoke-report` artifact. If "Which commit is live" failed, `version.json` couldn't be read, so the site may be down: check https://www.githubstatus.com. The run also warns if the live commit isn't `main`'s tip, which means a deploy didn't finish; check the latest Deploy run. |
+| `lighthouse` | A page's median score dropped under a budget. | The run summary has a score table, and the `lighthouse` artifact has the full reports (open the `.report.html` files). Performance scores vary a little from run to run; if it's just under 90 once, run the workflow again before digging in. |
+| `links` | A link on a live page is broken. | The run summary lists each broken link. Fix it in a PR. If the school site was just down, run the workflow again later. Zeffy links aren't checked automatically: click through them by hand when you add one. |
+| `domain` | DNS, a redirect, or the TLS certificate doesn't match what's expected. | The log says exactly which record or check. If MX, SPF, or DKIM changed, `@kp-pto.org` email is probably broken: compare Squarespace DNS to [DNS and HTTPS](#dns-and-https). If A/AAAA or `www` changed, the site may be down or pointed elsewhere. If the certificate is close to expiring, check Settings → Pages. If you changed DNS on purpose, update `BASELINE` in `scripts/check-domain.mjs` in a PR. |
+| `osv` | A new advisory affects a package in `tools/ci`. Nothing on the site is affected, since it has no dependencies, but the next PR's `inherit` check will fail too. | Wait for Dependabot's security PR, or bump the package in `tools/ci`. A release under 7 days old needs a `min-release-age-exclude` and Carl's OK. |
+
+To check that failures still open the issue, run the workflow by hand with
+**fail on purpose** ticked, then close the issue it opens.
+
+Optional: a free [UptimeRobot](https://uptimerobot.com) check on `https://kp-pto.org/`
+emails you within minutes if the site goes down, instead of waiting for Monday. You set
+that up; nothing in the repo depends on it.
