@@ -3,7 +3,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { BASELINE, compareDns, checkRedirect, checkCert } from "../scripts/check-domain.mjs";
 
-// What the live DNS looked like on 2026-10-28 (record order shuffled, as resolvers do).
+// The live DNS when the baseline was re-checked on 2026-10-28, in the shuffled
+// order resolvers return it.
 const LIVE = {
   A: ["185.199.110.153", "185.199.111.153", "185.199.108.153", "185.199.109.153"],
   AAAA: ["2606:50c0:8001::153", "2606:50c0:8000::153", "2606:50c0:8003::153", "2606:50c0:8002::153"],

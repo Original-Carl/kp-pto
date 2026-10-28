@@ -40,8 +40,14 @@ test("checkReports: each category has its own budget", () => {
   assert.match(errors[1], /seo 89 is under the budget of 90/);
 });
 
+test("checkReports: one run that didn't load is ignored; most runs failing is an error", () => {
+  const failedRun = { requestedUrl: HOME, runtimeError: { code: "NO_FCP" } };
+  assert.deepEqual(checkReports([failedRun, run(HOME, 0.95), run(HOME, 0.97)]).errors, []);
+  assert.deepEqual(checkReports([failedRun, failedRun, run(HOME, 0.95)]).errors, [`${HOME}: Lighthouse couldn't load the page in 2 of 3 runs (NO_FCP)`]);
+});
+
 test("checkReports: a page that didn't load, a missing score, or no reports at all fails", () => {
-  assert.match(checkReports([{ requestedUrl: HOME, runtimeError: { code: "NO_FCP" } }]).errors[0], /couldn't load the page \(NO_FCP\)/);
+  assert.match(checkReports([{ requestedUrl: HOME, runtimeError: { code: "NO_FCP" } }]).errors[0], /couldn't load the page in 1 of 1 runs \(NO_FCP\)/);
   assert.match(checkReports([run(HOME, null)]).errors[0], /no performance score/);
   assert.deepEqual(checkReports([]).errors, ["no Lighthouse reports to check"]);
 });

@@ -1,8 +1,9 @@
 // Operate stage: Lighthouse budgets for the live site. Reads Lighthouse JSON
 // reports (several runs per page; the Operate workflow makes them with the
 // `lighthouse` CLI from tools/ci, mobile with simulated slow 4G, its defaults)
-// and fails if any page's median score in a category is under BUDGETS.
-// The median damps run-to-run noise in the performance score. Node built-ins only.
+// and fails if any page's median score in a category is under BUDGETS, or if
+// most of a page's runs couldn't load it. The median damps run-to-run noise in
+// the performance score. Node built-ins only.
 // Run: node scripts/check-lighthouse.mjs <report.json>...
 import { appendFileSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -25,18 +26,21 @@ export function median(values) {
 // one { url, scores: { category: median } } per page, in first-seen order.
 export function checkReports(reports, budgets = BUDGETS) {
   const errors = [];
+  // url -> { runs: loaded results, failed: runtimeError codes }
   const byUrl = new Map();
   for (const lhr of reports) {
     const url = lhr.requestedUrl;
-    if (lhr.runtimeError) {
-      errors.push(`${url}: Lighthouse couldn't load the page (${lhr.runtimeError.code})`);
-      continue;
-    }
-    if (!byUrl.has(url)) byUrl.set(url, []);
-    byUrl.get(url).push(lhr);
+    if (!byUrl.has(url)) byUrl.set(url, { runs: [], failed: [] });
+    if (lhr.runtimeError) byUrl.get(url).failed.push(lhr.runtimeError.code);
+    else byUrl.get(url).runs.push(lhr);
   }
   const rows = [];
-  for (const [url, runs] of byUrl) {
+  for (const [url, { runs, failed }] of byUrl) {
+    // One run that didn't load is a network blip; most runs failing is a real problem.
+    if (failed.length >= runs.length) {
+      errors.push(`${url}: Lighthouse couldn't load the page in ${failed.length} of ${failed.length + runs.length} runs (${[...new Set(failed)].join(", ")})`);
+      continue;
+    }
     const scores = {};
     for (const [category, min] of Object.entries(budgets)) {
       const values = runs.map((r) => r.categories?.[category]?.score).filter((s) => typeof s === "number");

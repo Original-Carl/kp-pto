@@ -39,8 +39,10 @@ on:
 permissions:
   contents: read
 
+# One group per trigger, so a hand-started run never cancels the weekly one
+# (a cancelled job counts as a failure in `report`).
 concurrency:
-  group: operate-${{ github.ref }}
+  group: operate-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -58,10 +60,20 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
+      # version.json only picks the test suite, and the commit must be on main:
+      # checkout fetches any SHA in the fork network, so a hijacked site must
+      # not be able to make this job run someone else's code.
       - name: Which commit is live
         id: live
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           commit=$(node scripts/live-commit.mjs "$SITE_URL")
+          on_main=$(gh api "repos/$GITHUB_REPOSITORY/compare/$commit...main" --jq .status)
+          case "$on_main" in
+            ahead|identical) ;;
+            *) echo "::error::The live commit ${commit:0:7} isn't on main ($on_main)"; exit 1 ;;
+          esac
           echo "commit=$commit" >> "$GITHUB_OUTPUT"
           echo "Live: \`${commit:0:7}\` at $SITE_URL" >> "$GITHUB_STEP_SUMMARY"
           if [ "$GITHUB_EVENT_NAME" != pull_request ] && [ "$commit" != "$GITHUB_SHA" ]; then
@@ -158,7 +170,7 @@ jobs:
             --exclude 'zeffy\.com' \
             --format markdown --output lychee.md \
             $urls || status=$?
-          cat lychee.md >> "$GITHUB_STEP_SUMMARY"
+          if [ -f lychee.md ]; then cat lychee.md >> "$GITHUB_STEP_SUMMARY"; fi
           exit "$status"
 
   domain:
@@ -200,7 +212,10 @@ jobs:
   report:
     name: report failure
     needs: [smoke, lighthouse, links, domain, osv]
-    if: failure() && github.event_name != 'pull_request'
+    # A job that hits its timeout is "cancelled", not "failure", so check both.
+    if: >-
+      always() && github.event_name != 'pull_request' &&
+      (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -214,13 +229,15 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           title="Operate check failed"
-          failed=$(jq -r 'to_entries[] | select(.value.result == "failure") | "- `\(.key)`"' <<<"$NEEDS")
+          failed=$(jq -r 'to_entries[] | select(.value.result != "success") | "- `\(.key)` (\(.value.result))"' <<<"$NEEDS")
           body=$(printf '%s\n\n%s\n\n%s\n%s\n\n%s\n' \
-            "The weekly checks on the live site failed on $(date -u '+%Y-%m-%d %H:%M UTC')." \
+            "The Operate checks on the live site failed on $(date -u '+%Y-%m-%d %H:%M UTC')." \
             "Run: $RUN_URL" \
             "Failed:" "$failed" \
             "What each check means and what to do: docs/RUNBOOK.md → Monitoring. Close this issue once it's fixed.")
-          number=$(gh issue list --state open --search "\"$title\" in:title" --json number,title \
+          # Filters the list itself rather than using --search, whose index lags
+          # and could miss an issue opened minutes ago.
+          number=$(gh issue list --state open --limit 200 --json number,title \
             --jq "map(select(.title == \"$title\")) | .[0].number // empty")
           if [ -n "$number" ]; then
             gh issue comment "$number" --body "$body"

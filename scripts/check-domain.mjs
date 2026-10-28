@@ -6,7 +6,7 @@
 //   3. The TLS certificate is valid and has more than MIN_CERT_DAYS left
 //      (GitHub Pages renews it automatically; this catches renewal failing).
 // DNS is asked of public resolvers, not the runner's, so a stale local cache
-// can't hide a change. The baseline is the 2026-10-20 snapshot; if Carl changes
+// can't hide a change. The baseline was recorded 2026-10-20 and re-checked 2026-10-28; if Carl changes
 // DNS on purpose, update BASELINE in the same PR. See docs/RUNBOOK.md → Monitoring.
 // Run: node scripts/check-domain.mjs
 import { Resolver } from "node:dns/promises";
