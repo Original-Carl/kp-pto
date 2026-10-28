@@ -92,9 +92,11 @@ async function lookupRedirect(from) {
   return checkRedirect(from, res.status, res.headers.get("location"));
 }
 
+// Verifies the certificate as browsers do: an untrusted one (expired, wrong
+// name, bad chain) fails the connection, which main() reports as "TLS: …".
 function lookupCert() {
   return new Promise((resolve, reject) => {
-    const socket = connect({ host: DOMAIN, port: 443, servername: DOMAIN, rejectUnauthorized: false }, () => {
+    const socket = connect({ host: DOMAIN, port: 443, servername: DOMAIN }, () => {
       const { valid_to: validTo } = socket.getPeerCertificate();
       resolve({ authorized: socket.authorized, authorizationError: socket.authorizationError, validTo });
       socket.end();
