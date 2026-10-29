@@ -12,6 +12,7 @@ const LIVE = {
   MX: ["1 smtp.google.com"],
   apexTxt: ["v=spf1 include:_spf.google.com ~all", "google-site-verification=abc"],
   dkimTxt: ["v=DKIM1; k=rsa; p=MIIBIjANBgkq"],
+  dmarcTxt: ["v=DMARC1; p=none"],
   challengeTxt: [BASELINE.pagesChallenge],
 };
 const live = (changes) => ({ ...LIVE, ...changes });
@@ -26,12 +27,15 @@ test("compareDns: a changed, missing, or extra A/AAAA record fails", () => {
   assert.equal(compareDns(live({ A: [...LIVE.A, "198.49.23.144"] })).length, 1);
 });
 
-test("compareDns: email records — MX, SPF, DKIM — must stay Google's", () => {
+test("compareDns: email records — MX, SPF, DKIM, DMARC — must stay as set", () => {
   assert.match(compareDns(live({ MX: [] }))[0], /^MX .* \(none\)/);
   assert.match(compareDns(live({ MX: ["10 mx.squarespace.com"] }))[0], /^MX/);
   assert.match(compareDns(live({ apexTxt: ["v=spf1 -all"] }))[0], /^SPF/);
   assert.match(compareDns(live({ apexTxt: [...LIVE.apexTxt, "v=spf1 -all"] }))[0], /^SPF/, "two SPF records is a failure");
   assert.match(compareDns(live({ dkimTxt: [] }))[0], /DKIM/);
+  assert.match(compareDns(live({ dmarcTxt: [] }))[0], /^DMARC .* \(none\)/);
+  assert.match(compareDns(live({ dmarcTxt: ["v=DMARC1; p=reject"] }))[0], /^DMARC/, "a policy change needs a baseline change");
+  assert.match(compareDns(live({ dmarcTxt: ["v=DMARC1; p=none", "v=DMARC1; p=none"] }))[0], /^DMARC/, "two DMARC records is a failure");
 });
 
 test("compareDns: www CNAME and the Pages verification record", () => {

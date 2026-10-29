@@ -1,13 +1,15 @@
 // Operate stage: the domain still points where it should. Node built-ins only.
 //   1. DNS matches BASELINE: apex A/AAAA are GitHub Pages; www is a CNAME to
 //      GitHub; MX, SPF, and DKIM are Google Workspace's (so PTO email isn't
-//      broken); the GitHub Pages domain-verification TXT record is still there.
+//      broken); DMARC is the published policy; the GitHub Pages
+//      domain-verification TXT record is still there.
 //   2. http://, http://www., and https://www. all redirect to https://kp-pto.org/.
 //   3. The TLS certificate is valid and has more than MIN_CERT_DAYS left
 //      (GitHub Pages renews it automatically; this catches renewal failing).
 // DNS is asked of public resolvers, not the runner's, so a stale local cache
-// can't hide a change. The baseline was recorded 2026-10-20 and re-checked 2026-10-28; if Carl changes
-// DNS on purpose, update BASELINE in the same PR. See docs/RUNBOOK.md → Monitoring.
+// can't hide a change. The baseline was recorded 2026-10-20 and re-checked
+// 2026-10-28 (DMARC added that day); if Carl changes DNS on purpose, update
+// BASELINE in the same PR. See docs/RUNBOOK.md → Monitoring.
 // Run: node scripts/check-domain.mjs
 import { Resolver } from "node:dns/promises";
 import { connect } from "node:tls";
@@ -24,13 +26,16 @@ export const BASELINE = {
   SPF: "v=spf1 include:_spf.google.com ~all",
   // Only checks that a DKIM key is published; Google can rotate the key itself.
   dkimPrefix: "v=DKIM1;",
+  // At _dmarc. Moving to p=quarantine is planned once p=none has run clean
+  // for a month; change this in the same PR as the DNS change.
+  DMARC: "v=DMARC1; p=none",
   pagesChallenge: "2e31216c0053eaec4710667307bb7d",
 };
 
 const sameSet = (a, b) => a.length === b.length && [...a].sort().every((x, i) => x === [...b].sort()[i]);
 const show = (list) => (list.length ? list.join(", ") : "(none)");
 
-// observed: { A, AAAA, wwwCname, MX, apexTxt, dkimTxt, challengeTxt }, each a
+// observed: { A, AAAA, wwwCname, MX, apexTxt, dkimTxt, dmarcTxt, challengeTxt }, each a
 // list of strings (TXT records already joined from their chunks).
 export function compareDns(observed, baseline = BASELINE) {
   const errors = [];
@@ -47,6 +52,8 @@ export function compareDns(observed, baseline = BASELINE) {
   if (!observed.dkimTxt.some((t) => t.replace(/\s/g, "").startsWith(baseline.dkimPrefix))) {
     errors.push(`no DKIM key at google._domainkey.${DOMAIN}`);
   }
+  const dmarc = observed.dmarcTxt.filter((t) => t.startsWith("v=DMARC1"));
+  if (!sameSet(dmarc, [baseline.DMARC])) errors.push(`DMARC at _dmarc.${DOMAIN} is ${show(dmarc)}; expected "${baseline.DMARC}"`);
   if (!observed.challengeTxt.includes(baseline.pagesChallenge)) {
     errors.push(`GitHub Pages verification TXT record (_github-pages-challenge-Original-Carl.${DOMAIN}) is ${show(observed.challengeTxt)}; expected ${baseline.pagesChallenge}`);
   }
@@ -83,6 +90,7 @@ async function lookupDns() {
     MX: (await ask(() => resolver.resolveMx(DOMAIN))).map((r) => `${r.priority} ${r.exchange}`),
     apexTxt: await txt(DOMAIN),
     dkimTxt: await txt(`google._domainkey.${DOMAIN}`),
+    dmarcTxt: await txt(`_dmarc.${DOMAIN}`),
     challengeTxt: await txt(`_github-pages-challenge-Original-Carl.${DOMAIN}`),
   };
 }
