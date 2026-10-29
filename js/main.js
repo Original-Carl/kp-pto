@@ -51,6 +51,8 @@ function renderEvents(listEl, emptyEl, events, today) {
   const upcoming = upcomingEvents(events, today);
   listEl.replaceChildren();
   emptyEl.hidden = upcoming.length > 0;
+  // An empty list would keep the space styles.css holds for it while loading.
+  listEl.hidden = upcoming.length === 0;
 
   let currentMonth = "";
   for (const event of upcoming) {
