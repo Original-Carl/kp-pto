@@ -1,0 +1,246 @@
+name: Operate
+
+# Stage 5: weekly health checks on the live site (Mondays 11:00 UTC, 6–7 AM in
+# West Hartford). Not a PR gate; it watches what's already deployed.
+#   smoke       phone browser tests against the live site, using the test
+#               suite from the commit that's actually live (version.json)
+#   lighthouse  every page in sitemap.xml, mobile + simulated slow 4G,
+#               3 runs each; budgets in scripts/check-lighthouse.mjs
+#   links       lychee over every live page (Zeffy excluded: it answers 403
+#               to automated requests; check Zeffy links by hand)
+#   domain      DNS, redirects, TLS expiry (scripts/check-domain.mjs)
+#   osv         re-scans tools/ci's lockfile for newly published advisories
+# If any check fails, `report` opens one "Operate check failed" issue, or
+# comments on it if it's already open. What to do: docs/RUNBOOK.md → Monitoring.
+#
+# Also runs on PRs that change these checks (without opening an issue), and
+# by hand: Actions → Operate → Run workflow. Tick "fail on purpose" there to
+# test that a failure opens the issue.
+#
+# SITE_URL: repository variable, with a trailing slash; defaults to https://kp-pto.org/.
+
+on:
+  schedule:
+    - cron: "0 11 * * 1"
+  workflow_dispatch:
+    inputs:
+      fail_on_purpose:
+        description: Make the domain check fail, to test that the issue gets opened
+        type: boolean
+        default: false
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/operate.yml
+      - scripts/live-commit.mjs
+      - scripts/check-domain.mjs
+      - scripts/check-lighthouse.mjs
+
+permissions:
+  contents: read
+
+# One group per trigger, so a hand-started run never cancels the weekly one
+# (a cancelled job counts as a failure in `report`).
+concurrency:
+  group: operate-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SITE_URL: ${{ vars.SITE_URL || 'https://kp-pto.org/' }}
+
+jobs:
+  smoke:
+    name: smoke (live site)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      # version.json only picks the test suite, and the commit must be on main:
+      # checkout fetches any SHA in the fork network, so a hijacked site must
+      # not be able to make this job run someone else's code.
+      - name: Which commit is live
+        id: live
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          commit=$(node scripts/live-commit.mjs "$SITE_URL")
+          on_main=$(gh api "repos/$GITHUB_REPOSITORY/compare/$commit...main" --jq .status)
+          case "$on_main" in
+            ahead|identical) ;;
+            *) echo "::error::The live commit ${commit:0:7} isn't on main ($on_main)"; exit 1 ;;
+          esac
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "Live: \`${commit:0:7}\` at $SITE_URL" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$GITHUB_EVENT_NAME" != pull_request ] && [ "$commit" != "$GITHUB_SHA" ]; then
+            echo "::warning::main is ${GITHUB_SHA:0:7} but ${commit:0:7} is live. Check the latest Deploy run."
+          fi
+      # Test the live site with the tests that were written for it.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.live.outputs.commit }}
+          persist-credentials: false
+      - name: Install tools/ci
+        working-directory: tools/ci
+        run: npm ci --no-fund --no-audit
+      - name: Install Chromium
+        working-directory: tools/ci
+        run: npx playwright install --with-deps chromium
+      - name: Browser tests against the live site (phone)
+        working-directory: tools/ci
+        env:
+          BASE_URL: ${{ env.SITE_URL }}
+          EXPECTED_COMMIT: ${{ steps.live.outputs.commit }}
+        run: npx playwright test --project=mobile
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: operate-smoke-report
+          path: tools/ci/playwright-report
+          retention-days: 14
+
+  lighthouse:
+    name: lighthouse
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: tools/ci/package-lock.json
+      - name: Install tools/ci
+        working-directory: tools/ci
+        run: npm ci --no-fund --no-audit
+      # Uses the runner's preinstalled Chrome. A page that fails to load still
+      # writes a report (with runtimeError), which the budget check reports.
+      - name: Lighthouse (every page in sitemap.xml, 3 runs each)
+        working-directory: tools/ci
+        run: |
+          mkdir -p lighthouse
+          expected=0
+          for url in $(sed -n 's|.*<loc>\(.*\)</loc>.*|\1|p' ../../sitemap.xml); do
+            page=${url##*/}; page=${page%.html}; page=${page:-index}
+            for run in 1 2 3; do
+              expected=$((expected + 1))
+              npx lighthouse "$url" --quiet --output=json --output=html \
+                --output-path="lighthouse/$page-$run" \
+                --only-categories=performance,accessibility,best-practices,seo \
+                --chrome-flags="--headless=new" || true
+            done
+          done
+          written=$(ls lighthouse/*.report.json 2>/dev/null | wc -l)
+          if [ "$written" -ne "$expected" ]; then
+            echo "::error::Lighthouse wrote $written of $expected reports"
+            exit 1
+          fi
+      - name: Budgets
+        run: node scripts/check-lighthouse.mjs tools/ci/lighthouse/*.report.json
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: lighthouse
+          path: tools/ci/lighthouse
+          retention-days: 30
+
+  links:
+    name: links
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Checks every link on each live page: internal ones and the school site.
+      - name: lychee
+        env:
+          LYCHEE_IMAGE: lycheeverse/lychee@sha256:e2d19e57cf6ab037026f20b8e449a1f30d9d7f81eef4194763aab2eab20bd28d # 0.24.2
+        run: |
+          urls=$(sed -n 's|.*<loc>\(.*\)</loc>.*|\1|p' sitemap.xml)
+          status=0
+          docker run --rm -v "$GITHUB_WORKSPACE:/input" -w /input "$LYCHEE_IMAGE" \
+            --no-progress --max-retries 3 --retry-wait-time 5 --timeout 20 \
+            --exclude 'zeffy\.com' \
+            --format markdown --output lychee.md \
+            $urls || status=$?
+          if [ -f lychee.md ]; then cat lychee.md >> "$GITHUB_STEP_SUMMARY"; fi
+          exit "$status"
+
+  domain:
+    name: domain
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: DNS, redirects, TLS
+        run: node scripts/check-domain.mjs
+      - name: Fail on purpose (Run workflow → "fail on purpose")
+        if: inputs.fail_on_purpose
+        run: |
+          echo "::error::Failing on purpose to test the Operate issue"
+          exit 1
+
+  osv:
+    name: osv
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Same image and digest as ci.yml's inherit job; bump both together.
+      - name: OSV scan (tools/ci lockfile)
+        env:
+          OSV_IMAGE: ghcr.io/google/osv-scanner-action@sha256:71ad04ab2f8798be47870f9b18817ad317c2f8f2f97aa6726ba10d5578bc174a # v2.6.0
+        run: >-
+          docker run --rm
+          -v "$GITHUB_WORKSPACE:/github/workspace" -w /github/workspace
+          "$OSV_IMAGE" --lockfile=tools/ci/package-lock.json
+
+  report:
+    name: report failure
+    needs: [smoke, lighthouse, links, domain, osv]
+    # A job that hits its timeout is "cancelled", not "failure", so check both.
+    if: >-
+      always() && github.event_name != 'pull_request' &&
+      (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the "Operate check failed" issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          NEEDS: ${{ toJSON(needs) }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Operate check failed"
+          failed=$(jq -r 'to_entries[] | select(.value.result != "success") | "- `\(.key)` (\(.value.result))"' <<<"$NEEDS")
+          body=$(printf '%s\n\n%s\n\n%s\n%s\n\n%s\n' \
+            "The Operate checks on the live site failed on $(date -u '+%Y-%m-%d %H:%M UTC')." \
+            "Run: $RUN_URL" \
+            "Failed:" "$failed" \
+            "What each check means and what to do: docs/RUNBOOK.md → Monitoring. Close this issue once it's fixed.")
+          # Filters the list itself rather than using --search, whose index lags
+          # and could miss an issue opened minutes ago.
+          number=$(gh issue list --state open --limit 200 --json number,title \
+            --jq "map(select(.title == \"$title\")) | .[0].number // empty")
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
