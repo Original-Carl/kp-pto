@@ -293,6 +293,10 @@ address { font-style: normal; }
 
 /* Events */
 .event-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+/* Until main.js fills the list, hold a screen's height so the footer starts
+   below the fold and nothing visible moves when events appear (CLS). */
+.event-list:empty { min-height: 100vh; }
+.event-list[hidden] { display: none; }
 .event {
   display: flex;
   gap: 14px;

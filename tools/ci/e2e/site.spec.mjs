@@ -219,6 +219,28 @@ test("events: empty list shows the 'no events' note", async ({ page }) => {
   await page.goto("events.html");
   await expect(page.locator("#event-list li")).toHaveCount(0);
   await expect(page.locator("#events-empty")).toBeVisible();
+  // The space held for the list goes away, so the footer sits right under the note.
+  await expect(page.locator("#event-list")).toBeHidden();
+});
+
+// The list is drawn by script, so the page can paint before it fills in. On
+// a slow phone that pushed the footer down mid-load (Operate's Lighthouse
+// caught CLS 0.43). Delaying main.js forces that paint; nothing visible may move.
+test("events: the page doesn't jump when the list fills in", async ({ page }) => {
+  await page.route("**/js/main.js", async (route) => {
+    const response = await route.fetch();
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await route.fulfill({ response });
+  });
+  await page.goto("events.html");
+  await expect(page.locator("#event-list li").first()).toBeVisible();
+  const cls = await page.evaluate(() => new Promise((resolve) => {
+    new PerformanceObserver((list) => {
+      resolve(list.getEntries().filter((e) => !e.hadRecentInput).reduce((sum, e) => sum + e.value, 0));
+    }).observe({ type: "layout-shift", buffered: true });
+    setTimeout(() => resolve(0), 1000); // no entries at all: no shift
+  }));
+  expect(cls).toBeLessThan(0.1);
 });
 
 // ---------- Support ----------
