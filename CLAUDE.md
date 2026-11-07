@@ -15,8 +15,7 @@ the rules any agent working here must follow.
   WHOIS. They're listed in the README under "Organization details", and the tests enforce them.
 - **Zeffy is always linked to, never embedded.** The CSP is `frame-src 'none'`. Donate buttons
   use `data-zeffy-form="donate"`, and event-specific Zeffy links go in `js/events.js`.
-- **The contact email is temporarily `kppto678@gmail.com`**, until `info@kp-pto.org` can
-  receive mail. The README explains the swap.
+- **The contact email is `info@kp-pto.org`** on every page (`EMAIL` in `tests/pages.test.mjs`).
 
 ## Pages
 - The header and footer are copied onto every `*.html` page. Change all of them the same way,
