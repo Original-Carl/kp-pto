@@ -41,7 +41,7 @@ These must match what's registered with Google for Nonprofits exactly. They appe
 
 - **Legal name:** King Philip Middle School PTO, Inc.
 - **EIN (Charity ID):** 41-3002032
-- **Email:** kppto678@gmail.com, **temporarily**. Google for Nonprofits wants an @kp-pto.org address, but `info@kp-pto.org` can't be created until Google reactivates the Workspace account, since the trial expired. Once it exists, replace the address on every page and update `EMAIL` in `tests/pages.test.mjs`.
+- **Email:** info@kp-pto.org. It's used on every page, and `EMAIL` in `tests/pages.test.mjs` enforces it.
 - **Address:** C/O King Philip Middle School, 100 King Philip Drive, West Hartford, CT 06117
   - This is the formal address on both IRS letters, confirmed by the treasurer on 2026-10-23. Always use it on the site, with the "C/O" line, even though the PTO informally uses just "100 King Philip Drive".
 
