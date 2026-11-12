@@ -1,0 +1,7 @@
+#!/bin/sh
+# This repo sets core.hooksPath=.githooks, which overrides a global hooks path.
+# Hand off to the maintainer's global pre-push secret scan when it's installed;
+# a no-op on machines without it.
+global="$HOME/.config/git/hooks/pre-push"
+[ -x "$global" ] || exit 0
+exec "$global" "$@"
