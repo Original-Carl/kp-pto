@@ -131,6 +131,8 @@ This repo uses a DevSecOps pipeline with five stages. Work can't move on until e
   git config core.hooksPath .githooks
   ```
 
+  The same folder has a `pre-push` hook. If the maintainer's global pre-push secret scan is installed at `~/.config/git/hooks/pre-push`, the hook runs it; otherwise it does nothing. It's needed because a repo-level `core.hooksPath` overrides a global one. CI's `secrets` job (gitleaks) is still the required check.
+
 - To report a security issue, see [SECURITY.md](SECURITY.md).
 
 ### Supply chain (Inherit)
