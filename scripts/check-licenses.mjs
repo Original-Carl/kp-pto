@@ -16,7 +16,13 @@ export const ALLOWED = new Set([
 ]);
 
 // package name -> the exact license string that was reviewed (with a reason).
-export const REVIEWED = {};
+export const REVIEWED = {
+  // Sentry's own CLI (getsentry/cli), pulled in by lighthouse 13.6 via
+  // @sentry/node -> @sentry/bundler-plugins. FSL is source-available: any use
+  // except a competing product, and each release turns Apache-2.0 after two
+  // years. CI-only, never shipped. Approved by Carl 2026-11-09 (PR #19).
+  sentry: "FSL-1.1-Apache-2.0",
+};
 
 export function isAllowed(expr) {
   const e = String(expr).trim().replace(/^\((.*)\)$/, "$1").trim();
