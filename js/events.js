@@ -56,7 +56,12 @@ window.PTO_EVENTS = [
   { date: "2026-11-02", title: "Band MidFest" },
   { date: "2026-11-03", title: "Election Day: Teacher In-Service Day" },
   { date: "2026-11-11", title: "Veterans Day Assembly and Day of Giving/Service" },
-  { date: "2026-11-12", title: "PTO General Meeting", location: "Google Meet & Library" },
+  {
+    // Time and Meet link from the Google Calendar invite Carl shared on 2026-11-12.
+    date: "2026-11-12", title: "PTO General Meeting", time: "6:30–8 PM", location: "Google Meet & Library",
+    link: "https://meet.google.com/wyj-vwrf-jch",
+    linkText: "Join on Google Meet",
+  },
   { date: "2026-11-18", title: "Choral Fest" },
   { date: "2026-11-18", end: "2026-11-20", title: "Fall Conferences" },
   { date: "2026-11-19", title: "Unified Theater Showcase" },
